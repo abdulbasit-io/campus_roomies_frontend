@@ -1,18 +1,23 @@
-const apiOrigin = process.env.NEXT_PUBLIC_API_ORIGIN ?? 'http://localhost:4000';
+import Link from 'next/link';
+import { Header, Footer } from '@/components/site-chrome';
+import { ListingCard } from '@/components/listing-card';
+import { HeroSearch } from '@/components/hero-search';
+import { sampleListings } from '@/lib/domain';
+import { ArrowRight, Home, Plus } from 'lucide-react';
+
+const steps = [
+  ['01', 'Discover', 'Start with a real place around your institution, not a maze of unrelated listings.'],
+  ['02', 'Understand', 'See the price, the distance, the living rhythm, and the details that shape daily life.'],
+  ['03', 'Connect', 'When a place feels promising, reach the person behind it through a clear WhatsApp handoff.'],
+  ['04', 'Settle in', 'Ask the questions that matter and make the next decision with your eyes open.'],
+];
 
 export default function HomePage() {
-  return (
-    <main className="min-h-screen px-6 py-16 sm:px-12">
-      <div className="mx-auto max-w-5xl">
-        <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-campus">Campus Roomies</p>
-        <h1 className="max-w-2xl text-4xl font-bold tracking-tight sm:text-6xl">Find a room. Find your people.</h1>
-        <p className="mt-6 max-w-xl text-lg text-stone-600">Housing around your campus, made easier.</p>
-        <div className="mt-10 flex flex-wrap gap-4">
-          <a className="rounded-xl bg-campus px-5 py-3 font-semibold text-white" href="/browse">Browse rooms</a>
-          <a className="rounded-xl border border-stone-300 bg-white px-5 py-3 font-semibold" href="/listings/new">List a room</a>
-        </div>
-        <p className="mt-12 text-sm text-stone-500">API configured at {apiOrigin}</p>
-      </div>
-    </main>
-  );
+  return <><Header /><main>
+    <section className="hero-section"><div className="shell hero-grid"><div className="hero-copy"><h1>Find a room.<br /><em>Find your people.</em></h1><p className="hero-lede">Whether you have a room to share or need one to call home, start with the people and places that make campus life feel a little easier.</p><HeroSearch /><p className="hero-note">Browse first. Sign in only when you are ready to connect.</p></div><div className="hero-feature"><div className="feature-image" style={{ backgroundImage: `url("${sampleListings[2].image}")` }} /><div className="feature-overlay"><span className="status-dot" /> Available now</div><div className="feature-content"><p className="listing-kicker">Self-contained · Harmony</p><h2>New space, quieter mornings.</h2><p>Private bath · Running water · 10 mins to gate</p><div className="feature-footer"><strong>₦350,000 <small>/ year</small></strong><span>View details →</span></div></div></div></div></section>
+    <section className="section shell"><div className="section-heading"><div><h2>Rooms around you</h2></div><Link className="arrow-link" href="/browse">View all rooms →</Link></div><div className="listing-grid listing-grid-three">{sampleListings.slice(0, 3).map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div></section>
+    <section className="section section-warm"><div className="shell"><div className="center-heading"><h2>Finding a place shouldn&apos;t be complicated.</h2><p>Good housing decisions start with good information. That means clear prices, honest preferences, and no pressure to pretend every place is perfect.</p></div><div className="steps-grid">{steps.map(([number, title, copy]) => <div className="step-card" key={number}><span className="step-number">{number}</span><h3>{title}</h3><p>{copy}</p></div>)}</div></div></section>
+    <section className="section shell intent-section"><div className="center-heading"><h2>Everyone is looking for the right roommate.</h2><p>Some students already have a room. Others are still looking for one. Browse available rooms, or make your own preferences visible so the right people can find you.</p></div><div className="intent-grid"><Link className="intent-card" href="/browse"><span className="intent-icon"><Home size={21} /></span><div><h3>Find a room</h3><p>Browse available spaces and the people behind them.</p><strong>Explore rooms <ArrowRight size={14} /></strong></div></Link><Link className="intent-card intent-card-orange" href="/listings/new/room-needed"><span className="intent-icon"><Plus size={21} /></span><div><h3>I need a room</h3><p>Share your preferences so students with a suitable room can find you.</p><strong>Create a room-needed listing <ArrowRight size={14} /></strong></div></Link></div></section>
+    <section className="shell cta-panel"><div><p className="eyebrow">Your next chapter is somewhere</p><h2>Find somewhere that feels right.</h2><p>Start with a neighbourhood, a budget, or simply the kind of home you want to come back to.</p></div><div className="cta-actions"><Link className="button" href="/browse">Explore rooms →</Link><Link className="button button-secondary" href="/listings/new">List a room</Link></div></section>
+  </main><Footer /></>;
 }
