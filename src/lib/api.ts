@@ -29,3 +29,16 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   }
   return (body?.data ?? body) as T;
 }
+
+export async function apiMutation<T>(
+  path: string,
+  method: 'POST' | 'PATCH' | 'DELETE',
+  body?: unknown,
+): Promise<T> {
+  const csrf = await apiRequest<{ token: string }>('/auth/csrf');
+  return apiRequest<T>(path, {
+    method,
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    headers: { 'x-csrf-token': csrf.token },
+  });
+}

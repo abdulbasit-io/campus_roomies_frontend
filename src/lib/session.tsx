@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 export type SessionProfile = {
+  userId?: string;
+  role?: 'USER' | 'MODERATOR' | 'ADMIN';
   firstName: string;
   lastNameInitial: string;
   email: string;

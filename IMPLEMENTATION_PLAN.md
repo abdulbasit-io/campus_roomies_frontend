@@ -68,6 +68,40 @@ Organize routes and components around product domains, not screenshot filenames.
 - Seeker profile/listing flow.
 - Interest list.
 - Report flow.
+- Admin catalog-management experience, as a backend recommendation below.
+
+### Admin catalog management
+
+The backend recommended a dedicated, role-protected admin area for maintaining
+the controlled institution and area catalog. The initial admin dashboard,
+catalog management, area management, audit view, and admin sign-in pages have
+now been implemented under `src/app/admin`.
+
+Routes and pages:
+
+- `/admin/login`: administrator sign-in.
+- `/admin`: dashboard with institution/area totals, recent catalog changes,
+  and links to catalog maintenance.
+- `/admin/institutions`: searchable list showing abbreviation,
+  active/archived state, area count, and create/edit/archive/restore actions.
+- `/admin/institutions/new`: institution creation form.
+- `/admin/institutions/[institutionId]`: institution edit/details and link to
+  area management.
+- `/admin/institutions/[institutionId]/areas`: add, rename, archive, and
+  restore areas for the selected institution.
+- `/admin/audit`: paginated catalog-change history with actor, action, affected
+  record, and timestamp.
+
+Frontend behavior should align with the backend contract:
+
+- Require an authenticated `ADMIN` role; hiding navigation is not
+  authorization.
+- Use CSRF-protected mutations and surface server validation/conflict errors.
+- Explain that archival preserves existing references while removing catalog
+  records from public institution and area selectors.
+- Allow admins to include archived entries when reviewing and restoring them.
+- Validate and exercise the admin flows against a seeded administrator account
+  and the PostgreSQL-backed API.
 - WhatsApp handoff.
 - Moderator interfaces only if the frontend is responsible for them in the first application.
 
