@@ -33,6 +33,7 @@ export type ApiListing = {
   landmark: string | null;
   title: string;
   accommodationType: string;
+  accommodationTypeOther?: string | null;
   priceAmount: number | null;
   pricePeriod: 'YEAR' | 'SESSION' | null;
   availabilityType: 'AVAILABLE_NOW' | 'NEXT_SESSION' | 'SPECIFIC_DATE';
@@ -51,6 +52,7 @@ export type ApiListing = {
   about?: string;
   ownerDisplayName?: string;
   ownerInitials?: string;
+  ownerPhotoUrl?: string | null;
 };
 
 export type PaginatedListings = {
@@ -84,6 +86,7 @@ export type ListingDraftInput = {
   landmark?: string;
   title?: string;
   accommodationType?: string;
+  accommodationTypeOther?: string;
   priceAmount?: number;
   pricePeriod?: 'YEAR' | 'SESSION';
   availabilityType?: 'AVAILABLE_NOW' | 'NEXT_SESSION' | 'SPECIFIC_DATE';
@@ -121,6 +124,7 @@ export type OwnedDraft = {
   title: string | null;
   landmark: string | null;
   accommodation_type: string | null;
+  accommodation_type_other: string | null;
   price_amount: number | null;
   price_period: 'YEAR' | 'SESSION' | null;
   availability_type: 'AVAILABLE_NOW' | 'NEXT_SESSION' | 'SPECIFIC_DATE' | null;
@@ -156,6 +160,15 @@ function readable(value: string | null | undefined): string {
   return value.toLowerCase().split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
 }
 
+function seekerAvailability(listing: ApiListing): string {
+  if (listing.availabilityType === 'SPECIFIC_DATE' && listing.availabilityDate) {
+    return `Looking from ${new Date(`${listing.availabilityDate}T00:00:00`).toLocaleDateString()}`;
+  }
+  return listing.availabilityType === 'NEXT_SESSION'
+    ? 'By next session'
+    : 'Looking now';
+}
+
 export function toCardListing(listing: ApiListing): Listing {
   const preferences = listing.preferences ?? {};
   const features = [
@@ -171,10 +184,15 @@ export function toCardListing(listing: ApiListing): Listing {
     institution: listing.abbreviation || listing.institution,
     price: listing.priceAmount ?? listing.targetBudgetAmount ?? 0,
     period: (listing.pricePeriod ?? listing.targetBudgetPeriod) === 'YEAR' ? 'year' : 'session',
-    roomType: readable(listing.accommodationType),
-    availability: readable(listing.availabilityType),
+    roomType: listing.accommodationType === 'OTHER'
+      ? listing.accommodationTypeOther ?? 'Other accommodation'
+      : readable(listing.accommodationType),
+    availability: listing.intent === 'ROOM_NEEDED'
+      ? seekerAvailability(listing)
+      : readable(listing.availabilityType),
     description: listing.description,
-    image: listing.images?.[0]?.url ?? fallbackImage,
+    image: listing.images?.[0]?.url
+      ?? (listing.intent === 'ROOM_NEEDED' ? listing.ownerPhotoUrl ?? fallbackImage : fallbackImage),
     distance: listing.landmark ?? '',
     features,
     owner: listing.ownerDisplayName ?? 'Campus Roomies member',
@@ -320,6 +338,38 @@ export async function uploadDraftImages(
       }]
       : []),
   };
+}
+
+export async function uploadProfilePhoto(file: File): Promise<{ photoUrl: string }> {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    throw new Error('Choose a JPG, PNG, or WebP profile picture.');
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('Profile pictures must be no larger than 5 MB.');
+  }
+  const authorization = await apiMutation<UploadAuthorization>(
+    '/media/profile-photo/upload-authorizations',
+    'POST',
+  );
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+  if (!authorization.allowedFormats.includes(extension)) {
+    throw new Error('Choose a JPG, PNG, or WebP profile picture.');
+  }
+  const form = new FormData();
+  form.set('file', file);
+  form.set('api_key', authorization.apiKey);
+  form.set('timestamp', String(authorization.timestamp));
+  form.set('signature', authorization.signature);
+  form.set('folder', authorization.folder);
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${encodeURIComponent(authorization.cloudName)}/image/upload`,
+    { method: 'POST', body: form },
+  );
+  const result = await response.json() as { public_id?: string; error?: { message?: string } };
+  if (!response.ok || !result.public_id) {
+    throw new Error(result.error?.message ?? 'The profile picture upload failed.');
+  }
+  return apiMutation('/media/profile-photo', 'POST', { providerAssetId: result.public_id });
 }
 
 export function removeDraftImage(listingId: string, imageId: string): Promise<{ id: string }> {

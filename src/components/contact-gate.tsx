@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowRight, CheckCircle2, LockKeyhole, MessageCircle } from 'lucide-react';
 import { useSession } from '@/lib/session';
 import { createInterest, withdrawInterest } from '@/lib/frontend-api';
+import { authLink } from '@/lib/redirect';
 import { useState } from 'react';
 
 export function ContactGate({ listingId }: { listingId: string }) {
@@ -25,8 +26,9 @@ export function ContactGate({ listingId }: { listingId: string }) {
     }
   }
   if (!ready) return <div className="contact-loading">Checking contact access…</div>;
-  if (!profile) return <Link className="button full-width" href={`/login?next=/listings/${listingId}/contact`}><LockKeyhole size={15} /> Sign in to contact</Link>;
-  if (!profile.profileComplete) return <Link className="button full-width" href={`/profile/complete?next=/listings/${listingId}/contact`}><CheckCircle2 size={15} /> Complete your profile</Link>;
-  if (!profile.phoneConfirmed) return <Link className="button full-width" href={`/profile/complete?next=/listings/${listingId}/contact`}><MessageCircle size={15} /> Confirm your WhatsApp number</Link>;
+  const contactPath = `/listings/${listingId}/contact`;
+  if (!profile) return <Link className="button full-width" href={authLink('/login', contactPath)}><LockKeyhole size={15} /> Sign in to contact</Link>;
+  if (!profile.profileComplete) return <Link className="button full-width" href={authLink('/profile/complete', contactPath)}><CheckCircle2 size={15} /> Complete your profile</Link>;
+  if (!profile.phoneConfirmed) return <Link className="button full-width" href={authLink('/profile/complete', contactPath)}><MessageCircle size={15} /> Confirm your WhatsApp number</Link>;
   return <><button className="button button-secondary full-width" onClick={toggleInterest} disabled={pending}>{pending ? 'Updating…' : interested ? 'Interested · Undo' : 'I’m interested'}</button>{error && <p className="form-error" role="alert">{error}</p>}<Link className="button full-width" href={`/listings/${listingId}/contact`}><MessageCircle size={15} /> Continue to WhatsApp <ArrowRight size={15} /></Link></>;
 }

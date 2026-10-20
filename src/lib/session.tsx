@@ -11,6 +11,7 @@ export type SessionProfile = {
   email: string;
   phoneConfirmed: boolean;
   profileComplete: boolean;
+  photoUrl: string | null;
 };
 
 type SessionContextValue = {

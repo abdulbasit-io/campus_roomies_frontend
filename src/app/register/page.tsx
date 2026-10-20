@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { Footer, Header } from '@/components/site-chrome';
 import { register } from '@/lib/frontend-api';
 import { useSession } from '@/lib/session';
+import { authLink, getLocalRedirectTarget } from '@/lib/redirect';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,6 +14,11 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '', gender: 'FEMALE' as 'MALE' | 'FEMALE' });
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
+  const [next, setNext] = useState<string | null>(null);
+
+  useEffect(() => {
+    setNext(new URLSearchParams(window.location.search).get('next'));
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -20,7 +26,11 @@ export default function RegisterPage() {
     setError('');
     try {
       signIn(await register(form));
-      router.replace('/browse');
+      router.replace(getLocalRedirectTarget(
+        new URLSearchParams(window.location.search).get('next'),
+        '/browse',
+        window.location.origin,
+      ));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to create your account.');
     } finally {
@@ -37,6 +47,6 @@ export default function RegisterPage() {
     <label>Gender<select value={form.gender} onChange={(event) => setForm({ ...form, gender: event.target.value as 'MALE' | 'FEMALE' })}><option value="FEMALE">Female</option><option value="MALE">Male</option></select></label>
     {error && <p className="form-error" role="alert">{error}</p>}
     <button className="button full-width" disabled={pending}>{pending ? 'Creating account…' : 'Create account'}</button>
-    <p className="auth-foot">Already have an account? <Link href="/login">Log in</Link></p>
+    <p className="auth-foot">Already have an account? <Link href={authLink('/login', next)}>Log in</Link></p>
   </form></main><Footer /></>;
 }

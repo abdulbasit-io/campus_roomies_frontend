@@ -52,4 +52,23 @@ describe('toCardListing', () => {
   it('does not invent preference features when they are missing', () => {
     expect(toCardListing({ ...listing, preferences: {} }).features).toEqual([]);
   });
+
+  it('uses a seeker profile photo and labels room-needed availability as a search', () => {
+    expect(toCardListing({
+      ...listing,
+      availabilityType: 'AVAILABLE_NOW',
+      ownerPhotoUrl: 'https://images.example/student.jpg',
+    })).toMatchObject({
+      image: 'https://images.example/student.jpg',
+      availability: 'Looking now',
+    });
+  });
+
+  it('uses the custom accommodation description for Other room types', () => {
+    expect(toCardListing({
+      ...listing,
+      accommodationType: 'OTHER',
+      accommodationTypeOther: 'Studio apartment',
+    }).roomType).toBe('Studio apartment');
+  });
 });

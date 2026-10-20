@@ -148,7 +148,8 @@ Keep domain forms and view models typed against the shared API contract. Avoid d
 - Password reset screens.
 - Profile completion for WhatsApp number, institution, department, level, and About Me.
 - Format validation and explicit phone confirmation.
-- Optional profile photo.
+- Profile photo upload and preview; required before creating any listing.
+- Use the profile photo as the poster image for room-needed listings.
 - Accessible form errors and focus management.
 
 ### Contact and interests
@@ -169,6 +170,7 @@ Keep domain forms and view models typed against the shared API contract. Avoid d
   - Curated area.
   - Optional landmark.
   - Accommodation type.
+  - Other accommodation type with a required description.
   - Price amount and period.
   - Availability.
   - Description.
@@ -189,6 +191,7 @@ Keep domain forms and view models typed against the shared API contract. Avoid d
 - Daily lifestyle traits.
 - About field with 300-character limit.
 - Public seeker preview.
+- Present seeker move-in timing as a search requirement, not room availability.
 - Publish/complete flow without forcing the room-holder path.
 
 ### Reporting and moderation
@@ -300,8 +303,9 @@ open and display the API error.
 
 Known scope boundaries:
 
-- Saved listing IDs are browser-local because the backend does not currently
-  expose a saved-listings API. They are not shared across browsers or devices.
+- Saved listing IDs are browser-local for both authenticated and anonymous
+  users. They do not require sign-in and are not shared across browsers or
+  devices because the backend does not expose a saved-listings API.
 - Draft persistence is explicit through the Save draft action; it is not
   autosaved while typing.
 - Cloudinary uploads require the backend provider credentials to be configured.

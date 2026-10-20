@@ -22,6 +22,8 @@ export class ApiRequestError extends Error {
 }
 
 const apiOrigin = process.env.NEXT_PUBLIC_API_ORIGIN;
+let cachedCsrfToken: string | null = null;
+let csrfTokenRequest: Promise<string> | null = null;
 
 export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   if (!apiOrigin) {
@@ -44,12 +46,37 @@ export async function apiMutation<T>(
   method: 'POST' | 'PATCH' | 'DELETE',
   body?: unknown,
 ): Promise<T> {
-  const csrf = await apiRequest<{ token: string }>('/auth/csrf');
-  return apiRequest<T>(path, {
+  const send = (token: string) => apiRequest<T>(path, {
     method,
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-    headers: { 'x-csrf-token': csrf.token },
+    headers: { 'x-csrf-token': token },
   });
+  try {
+    return await send(await getCsrfToken());
+  } catch (cause) {
+    if (!(cause instanceof ApiRequestError) || cause.error.code !== 'CSRF_TOKEN_INVALID') {
+      throw cause;
+    }
+    cachedCsrfToken = null;
+    csrfTokenRequest = null;
+    return send(await getCsrfToken());
+  }
+}
+
+async function getCsrfToken(): Promise<string> {
+  if (cachedCsrfToken) return cachedCsrfToken;
+  if (!csrfTokenRequest) {
+    csrfTokenRequest = apiRequest<{ token: string }>('/auth/csrf')
+      .then(({ token }) => {
+        cachedCsrfToken = token;
+        return token;
+      });
+  }
+  try {
+    return await csrfTokenRequest;
+  } finally {
+    csrfTokenRequest = null;
+  }
 }
 
 export function getApiOrigin(): string | undefined {

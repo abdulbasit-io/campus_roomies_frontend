@@ -24,6 +24,7 @@ const completionFields = [
   (profile: Profile) => Boolean(profile.department),
   (profile: Profile) => Boolean(profile.academicLevel),
   (profile: Profile) => Boolean(profile.about),
+  (profile: Profile) => Boolean(profile.photoUrl),
 ];
 
 function getListingPrice(listing: OwnedDraft): { amount: number; period: string } | null {
@@ -98,7 +99,9 @@ export default function ProfilePage() {
             <div className="profile-dashboard-grid">
               <aside className="profile-summary-card">
                 <div className="profile-summary-person">
-                  <div className="profile-avatar">{profile.firstName.charAt(0).toUpperCase()}</div>
+                  <div className="profile-avatar" style={profile.photoUrl ? { backgroundImage: `url("${profile.photoUrl}")` } : undefined}>
+                    {!profile.photoUrl && profile.firstName.charAt(0).toUpperCase()}
+                  </div>
                   <div>
                     <p className="eyebrow">Student profile</p>
                     <h2>{profile.firstName} {profile.lastName}</h2>
@@ -120,10 +123,12 @@ export default function ProfilePage() {
                     <span style={{ width: `${completionPercent}%` }} />
                   </div>
                   <p>{profile.profileComplete
-                    ? 'Your profile has the details needed to connect and publish.'
+                    ? profile.photoUrl
+                      ? 'Your profile has the details needed to connect and publish.'
+                      : 'You can connect, but need a profile picture before creating a listing.'
                     : 'Complete your profile before contacting listers or publishing.'}</p>
-                  {!profile.profileComplete && (
-                    <Link href="/profile/complete">Complete profile <ArrowRight size={14} /></Link>
+                  {(!profile.profileComplete || !profile.photoUrl) && (
+                    <Link href="/profile/complete">{profile.photoUrl ? 'Complete profile' : 'Add profile picture'} <ArrowRight size={14} /></Link>
                   )}
                 </section>
 

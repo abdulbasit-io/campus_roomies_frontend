@@ -85,6 +85,9 @@ export default function ListingDetailsPage() {
 
   const card = toCardListing(listing);
   const photos = listing.images?.map((image) => image.url) ?? [];
+  if (!photos.length && listing.intent === 'ROOM_NEEDED' && listing.ownerPhotoUrl) {
+    photos.push(listing.ownerPhotoUrl);
+  }
   const amount = listing.priceAmount ?? listing.targetBudgetAmount ?? 0;
   const period = (listing.pricePeriod ?? listing.targetBudgetPeriod) === 'YEAR' ? 'year' : 'session';
   const preferences = listing.preferences ?? {};
