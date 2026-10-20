@@ -5,9 +5,18 @@ export type ApiError = {
   requestId?: string;
 };
 
+export type ApiEnvelope<T> = { data: T };
+
 export class ApiRequestError extends Error {
   constructor(public readonly error: ApiError, public readonly status: number) {
-    super(error.message);
+    const fieldErrors = Object.entries(error.fields ?? {}).map(([field, message]) => {
+      const readableField = field
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .replaceAll('_', ' ')
+        .toLowerCase();
+      return `${readableField}: ${message}`;
+    });
+    super(fieldErrors.length ? `${error.message} ${fieldErrors.join(' ')}` : error.message);
     this.name = 'ApiRequestError';
   }
 }
@@ -41,4 +50,8 @@ export async function apiMutation<T>(
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     headers: { 'x-csrf-token': csrf.token },
   });
+}
+
+export function getApiOrigin(): string | undefined {
+  return apiOrigin;
 }

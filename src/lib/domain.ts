@@ -15,7 +15,7 @@ export type Listing = {
   availability: string;
   description: string;
   image: string;
-  distance: string;
+  distance?: string;
   features: string[];
   owner: string;
   ownerInitials: string;

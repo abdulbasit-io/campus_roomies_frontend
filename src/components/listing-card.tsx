@@ -14,11 +14,11 @@ export function ListingCard({ listing, compact = false }: { listing: Listing; co
         <span onClick={(event) => event.preventDefault()}><SaveButton listingId={listing.id} compact /></span>
       </Link>
       <div className="listing-body">
-        <div className="listing-kicker"><span>{listing.roomType}</span><span>·</span><span>{listing.distance}</span></div>
+        <div className="listing-kicker"><span>{listing.roomType}</span>{listing.distance && <><span>·</span><span>{listing.distance}</span></>}</div>
         <Link href={`/listings/${listing.id}`}><h3>{listing.title}</h3></Link>
         <p className="listing-price">{formatNaira(listing.price)} <small>/ {listing.period}</small></p>
         <p className="listing-location"><MapPin size={13} /> {listing.area} · {listing.institution}</p>
-        <div className="tag-row">{listing.features.map((feature) => <span className="tag" key={feature}>{feature}</span>)}</div>
+        {listing.features.length > 0 && <div className="tag-row">{listing.features.map((feature) => <span className="tag" key={feature}>{feature}</span>)}</div>}
         {!compact && <div className="listing-owner"><span className="owner-avatar">{listing.ownerInitials}</span><span>{listing.owner}</span><Link className="button button-small button-quiet" href={`/listings/${listing.id}`}>View room</Link></div>}
       </div>
     </article>

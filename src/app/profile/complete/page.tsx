@@ -2,24 +2,84 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { Footer, Header } from '@/components/site-chrome';
+import { Institution, getMyProfile, listInstitutions, Profile, updateMyProfile } from '@/lib/frontend-api';
 import { useSession } from '@/lib/session';
 
 export default function CompleteProfilePage() {
   const router = useRouter();
-  const { profile, updateProfile } = useSession();
-  const [firstName, setFirstName] = useState(profile?.firstName ?? '');
-  const [lastName, setLastName] = useState('');
+  const { profile: session, updateProfile } = useSession();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [phone, setPhone] = useState('');
+  const [institutionId, setInstitutionId] = useState('');
+  const [department, setDepartment] = useState('');
+  const [academicLevel, setAcademicLevel] = useState('');
   const [about, setAbout] = useState('');
+  const [confirmWhatsapp, setConfirmWhatsapp] = useState(false);
   const [error, setError] = useState('');
-  const submit = (event: FormEvent) => {
+  const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    Promise.all([getMyProfile(), listInstitutions()]).then(([current, catalog]) => {
+      setProfile(current);
+      setInstitutions(catalog);
+      setPhone(current.whatsappNumber ?? '');
+      setInstitutionId(current.institutionId ?? '');
+      setDepartment(current.department ?? '');
+      setAcademicLevel(current.academicLevel ?? '');
+      setAbout(current.about ?? '');
+    }).catch((cause: Error) => setError(cause.message));
+  }, []);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!firstName.trim() || !lastName.trim() || !/^\+?[0-9\s-]{10,}$/.test(phone)) { setError('Add your name and a valid WhatsApp number before continuing.'); return; }
-    updateProfile({ firstName, lastNameInitial: `${lastName.trim()[0]}.`, email: profile?.email ?? '', phoneConfirmed: true, profileComplete: true });
-    const next = new URLSearchParams(window.location.search).get('next');
-    router.push(next || '/profile');
-  };
-  return <><Header /><main className="auth-page shell"><form className="auth-card" onSubmit={submit}><p className="eyebrow">Profile completion</p><h1>A little context goes a long way.</h1><p className="auth-copy">Tell people the basics before you start conversations.</p><label>First name<input required value={firstName} onChange={(event) => setFirstName(event.target.value)} placeholder="Amina" /></label><label>Last name<input required value={lastName} onChange={(event) => setLastName(event.target.value)} placeholder="Your last name" /></label><label>WhatsApp number<input required value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+234 800 000 0000" /></label><label>About you <small>{about.length}/300</small><textarea required maxLength={300} value={about} onChange={(event) => setAbout(event.target.value)} placeholder="A line or two about your course, year, or living rhythm." /></label>{error && <p className="form-error" role="alert">{error}</p>}<button className="button full-width" type="submit">Confirm profile →</button><Link className="back-link" href="/profile">← Back to profile</Link></form></main><Footer /></>;
+    setPending(true);
+    setError('');
+    if (!confirmWhatsapp) {
+      setPending(false);
+      setError('Confirm that this is the WhatsApp number where you can be reached.');
+      return;
+    }
+    try {
+      const updated = await updateMyProfile({
+        whatsappNumber: phone,
+        confirmWhatsapp: true,
+        institutionId,
+        department,
+        academicLevel,
+        about,
+      });
+      updateProfile({
+        userId: updated.userId,
+        role: session?.role ?? 'USER',
+        firstName: updated.firstName,
+        lastNameInitial: `${updated.lastName.charAt(0).toUpperCase()}.`,
+        email: updated.email,
+        phoneConfirmed: updated.phoneConfirmed,
+        profileComplete: updated.profileComplete,
+      });
+      const next = new URLSearchParams(window.location.search).get('next');
+      router.push(next || '/profile');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to update your profile.');
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return <><Header /><main className="auth-page shell"><form className="auth-card" onSubmit={submit}>
+    <p className="eyebrow">Profile completion</p><h1>A little context goes a long way.</h1>
+    <p className="auth-copy">{profile ? `Hi ${profile.firstName}, add the details students need before connecting.` : 'Loading your account profile…'}</p>
+    <label>WhatsApp number<input required minLength={7} maxLength={20} value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+234 800 000 0000" /></label>
+    <label>Institution<select required value={institutionId} onChange={(event) => setInstitutionId(event.target.value)}><option value="">Choose your institution</option>{institutions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+    <label>Department<input required maxLength={120} value={department} onChange={(event) => setDepartment(event.target.value)} placeholder="e.g. Computer Science" /></label>
+    <label>Academic level<input required maxLength={80} value={academicLevel} onChange={(event) => setAcademicLevel(event.target.value)} placeholder="e.g. 300 Level" /></label>
+    <label>About you <small>{about.length}/500</small><textarea required maxLength={500} value={about} onChange={(event) => setAbout(event.target.value)} placeholder="A line or two about your course, year, or living rhythm." /></label>
+    <label className="profile-attestation"><input type="checkbox" checked={confirmWhatsapp} onChange={(event) => setConfirmWhatsapp(event.target.checked)} /> I confirm this is my WhatsApp number. If the number is not correct, listers may not be able to contact me.</label>
+    {error && <p className="form-error" role="alert">{error}</p>}
+    <button className="button full-width" type="submit" disabled={pending || !profile}>{pending ? 'Saving profile…' : 'Save profile'}</button>
+    <Link className="back-link" href="/profile">← Back to profile</Link>
+  </form></main><Footer /></>;
 }

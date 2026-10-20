@@ -286,3 +286,28 @@ Specifically test:
 - Critical flows are usable at all required viewport sizes.
 - Loading, empty, error, success, disabled, selected, Found, Restricted, and unsaved states are covered.
 - External WhatsApp handoff is clearly distinguished from in-app messaging.
+
+## 11. Current API integration status
+
+The frontend now uses the backend API for cookie-session bootstrap, registration,
+login/logout, password reset, profile completion, institution and area catalogs,
+public discovery and listing details, owner listing management, reports, interest
+actions, contact authorization, and admin catalog workflows. Listing forms save
+and resume backend drafts, room-holder photos use the backend-authorized
+Cloudinary flow, and both listing intents can submit a backend publication
+request. Backend validation remains authoritative; failed requests keep the form
+open and display the API error.
+
+Known scope boundaries:
+
+- Saved listing IDs are browser-local because the backend does not currently
+  expose a saved-listings API. They are not shared across browsers or devices.
+- Draft persistence is explicit through the Save draft action; it is not
+  autosaved while typing.
+- Cloudinary uploads require the backend provider credentials to be configured.
+- Vitest is configured, but this frontend currently has no test files. Add
+  component/API integration tests and browser end-to-end coverage before treating
+  the frontend completion gates above as satisfied.
+- Full flow validation still requires a running API, a seeded account with a
+  complete profile, active institution/area catalog records, and configured
+  email/Cloudinary providers for the respective flows.

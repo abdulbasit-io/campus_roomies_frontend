@@ -3,12 +3,30 @@
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, LockKeyhole, MessageCircle } from 'lucide-react';
 import { useSession } from '@/lib/session';
+import { createInterest, withdrawInterest } from '@/lib/frontend-api';
+import { useState } from 'react';
 
 export function ContactGate({ listingId }: { listingId: string }) {
   const { profile, ready } = useSession();
+  const [interested, setInterested] = useState(false);
+  const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
+  async function toggleInterest() {
+    setPending(true);
+    setError('');
+    try {
+      if (interested) await withdrawInterest(listingId);
+      else await createInterest(listingId);
+      setInterested(!interested);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to update interest.');
+    } finally {
+      setPending(false);
+    }
+  }
   if (!ready) return <div className="contact-loading">Checking contact access…</div>;
   if (!profile) return <Link className="button full-width" href={`/login?next=/listings/${listingId}/contact`}><LockKeyhole size={15} /> Sign in to contact</Link>;
   if (!profile.profileComplete) return <Link className="button full-width" href={`/profile/complete?next=/listings/${listingId}/contact`}><CheckCircle2 size={15} /> Complete your profile</Link>;
   if (!profile.phoneConfirmed) return <Link className="button full-width" href={`/profile/complete?next=/listings/${listingId}/contact`}><MessageCircle size={15} /> Confirm your WhatsApp number</Link>;
-  return <Link className="button full-width" href={`/listings/${listingId}/contact`}><MessageCircle size={15} /> Continue to WhatsApp <ArrowRight size={15} /></Link>;
+  return <><button className="button button-secondary full-width" onClick={toggleInterest} disabled={pending}>{pending ? 'Updating…' : interested ? 'Interested · Undo' : 'I’m interested'}</button>{error && <p className="form-error" role="alert">{error}</p>}<Link className="button full-width" href={`/listings/${listingId}/contact`}><MessageCircle size={15} /> Continue to WhatsApp <ArrowRight size={15} /></Link></>;
 }
