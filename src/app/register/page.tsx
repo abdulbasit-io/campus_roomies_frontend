@@ -20,7 +20,7 @@ export default function RegisterPage() {
     setError('');
     try {
       signIn(await register(form));
-      router.replace('/profile/complete');
+      router.replace('/browse');
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to create your account.');
     } finally {

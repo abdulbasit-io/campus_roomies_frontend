@@ -49,6 +49,8 @@ export type ApiListing = {
   targetAreaId?: string;
   targetArea?: string | null;
   about?: string;
+  ownerDisplayName?: string;
+  ownerInitials?: string;
 };
 
 export type PaginatedListings = {
@@ -131,6 +133,11 @@ export type OwnedDraft = {
   images?: DraftImage[];
 };
 
+export type ImageBatchResult = {
+  uploaded: DraftImage[];
+  failures: Array<{ index: number; message: string }>;
+};
+
 type UploadAuthorization = {
   provider: 'CLOUDINARY';
   cloudName: string;
@@ -170,8 +177,8 @@ export function toCardListing(listing: ApiListing): Listing {
     image: listing.images?.[0]?.url ?? fallbackImage,
     distance: listing.landmark ?? '',
     features,
-    owner: 'Campus Roomies member',
-    ownerInitials: 'CR',
+    owner: listing.ownerDisplayName ?? 'Campus Roomies member',
+    ownerInitials: listing.ownerInitials ?? 'CR',
   };
 }
 
@@ -202,6 +209,10 @@ export function searchListings(input: {
 
 export function getPublicListing(id: string): Promise<ApiListing> {
   return apiRequest(`/listings/${id}`);
+}
+
+export function getOwnedListing(id: string): Promise<ApiListing> {
+  return apiRequest(`/me/listings/owned/${id}`);
 }
 
 export function getMyProfile(): Promise<Profile> {
@@ -267,37 +278,48 @@ export function markListingFound(id: string): Promise<{ id: string; status: stri
   return apiMutation(`/me/listings/${id}/found`, 'POST');
 }
 
-export async function uploadDraftImage(
+export async function uploadDraftImages(
   listingId: string,
-  file: File,
-  position: number,
-): Promise<DraftImage> {
+  files: File[],
+  firstPosition: number,
+): Promise<ImageBatchResult> {
   const authorization = await apiMutation<UploadAuthorization>('/media/upload-authorizations', 'POST');
-  if (file.size > authorization.maxFileSizeBytes) {
-    throw new Error(`Image must be no larger than ${Math.floor(authorization.maxFileSizeBytes / (1024 * 1024))} MB.`);
-  }
-  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
-  if (!authorization.allowedFormats.includes(extension)) {
-    throw new Error('Choose a JPG, PNG, or WebP image.');
-  }
-  const form = new FormData();
-  form.set('file', file);
-  form.set('api_key', authorization.apiKey);
-  form.set('timestamp', String(authorization.timestamp));
-  form.set('signature', authorization.signature);
-  form.set('folder', authorization.folder);
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${encodeURIComponent(authorization.cloudName)}/image/upload`,
-    { method: 'POST', body: form },
-  );
-  const result = await response.json() as { public_id?: string; error?: { message?: string } };
-  if (!response.ok || !result.public_id) {
-    throw new Error(result.error?.message ?? 'The image upload failed.');
-  }
-  return apiMutation<DraftImage>(`/media/listings/${listingId}/images`, 'POST', {
-    providerAssetId: result.public_id,
-    position,
-  });
+  const results = await Promise.allSettled(files.map(async (file, index) => {
+    if (file.size > authorization.maxFileSizeBytes) {
+      throw new Error(`${file.name}: image must be no larger than ${Math.floor(authorization.maxFileSizeBytes / (1024 * 1024))} MB.`);
+    }
+    const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+    if (!authorization.allowedFormats.includes(extension)) {
+      throw new Error(`${file.name}: choose a JPG, PNG, or WebP image.`);
+    }
+    const form = new FormData();
+    form.set('file', file);
+    form.set('api_key', authorization.apiKey);
+    form.set('timestamp', String(authorization.timestamp));
+    form.set('signature', authorization.signature);
+    form.set('folder', authorization.folder);
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${encodeURIComponent(authorization.cloudName)}/image/upload`,
+      { method: 'POST', body: form },
+    );
+    const result = await response.json() as { public_id?: string; error?: { message?: string } };
+    if (!response.ok || !result.public_id) {
+      throw new Error(`${file.name}: ${result.error?.message ?? 'The image upload failed.'}`);
+    }
+    return apiMutation<DraftImage>(`/media/listings/${listingId}/images`, 'POST', {
+      providerAssetId: result.public_id,
+      position: firstPosition + index,
+    });
+  }));
+  return {
+    uploaded: results.flatMap((result) => result.status === 'fulfilled' ? [result.value] : []),
+    failures: results.flatMap((result, index) => result.status === 'rejected'
+      ? [{
+        index,
+        message: result.reason instanceof Error ? result.reason.message : 'An image could not be uploaded.',
+      }]
+      : []),
+  };
 }
 
 export function removeDraftImage(listingId: string, imageId: string): Promise<{ id: string }> {

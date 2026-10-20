@@ -31,6 +31,8 @@ const listing: ApiListing = {
   targetAreaId: 'area-1',
   targetArea: 'Camp',
   about: 'A considerate student.',
+  ownerDisplayName: 'Aisha M.',
+  ownerInitials: 'AM',
 };
 
 describe('toCardListing', () => {
@@ -41,6 +43,8 @@ describe('toCardListing', () => {
       period: 'year',
       image: '',
       distance: '',
+      owner: 'Aisha M.',
+      ownerInitials: 'AM',
       features: ['Quiet study hours', 'Early riser'],
     });
   });
