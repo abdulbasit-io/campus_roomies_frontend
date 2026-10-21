@@ -5,7 +5,7 @@ import { ApiRequestError, apiRequest } from './api';
 
 export type SessionProfile = {
   userId: string;
-  role: 'USER' | 'MODERATOR' | 'ADMIN';
+  role: 'USER' | 'ADMIN';
   firstName: string;
   lastNameInitial: string;
   email: string;

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Activity, Building2, LayoutDashboard, LogOut } from 'lucide-react';
+import { Activity, Building2, LayoutDashboard, LogOut, ShieldCheck } from 'lucide-react';
 import { Logo } from '@/components/site-chrome';
 import { ApiRequestError, apiMutation, apiRequest } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -15,6 +15,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const loginPage = pathname === '/admin/login';
   const [authorized, setAuthorized] = useState(loginPage ? true : false);
   const [error, setError] = useState('');
+  const [adminIdentity, setAdminIdentity] = useState('');
 
   useEffect(() => {
     if (loginPage) {
@@ -24,7 +25,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     let active = true;
     apiRequest<{
       userId: string;
-      role: 'USER' | 'MODERATOR' | 'ADMIN';
+      role: 'USER' | 'ADMIN';
       firstName: string;
       lastNameInitial: string;
       email: string;
@@ -36,6 +37,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         setError('This account does not have administrator access.');
         return;
       }
+      setAdminIdentity(`${profile.firstName} ${profile.lastNameInitial}`);
       setAuthorized(true);
     }).catch((cause: unknown) => {
       if (!active) return;
@@ -77,11 +79,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <Logo />
         <p className="admin-sidebar-label">Administration</p>
         <nav aria-label="Admin navigation">
-          <Link href="/admin"><LayoutDashboard size={17} /> Overview</Link>
-          <Link href="/admin/institutions"><Building2 size={17} /> Institutions</Link>
-          <Link href="/admin/audit"><Activity size={17} /> Audit history</Link>
+          <Link href="/admin" aria-current={pathname === '/admin' ? 'page' : undefined} aria-label="Overview"><LayoutDashboard size={17} /><span>Overview</span></Link>
+          <Link href="/admin/institutions" aria-current={pathname.startsWith('/admin/institutions') ? 'page' : undefined} aria-label="Institutions"><Building2 size={17} /><span>Institutions</span></Link>
+          <Link href="/admin/audit" aria-current={pathname.startsWith('/admin/audit') ? 'page' : undefined} aria-label="Audit history"><Activity size={17} /><span>Audit history</span></Link>
         </nav>
-        <button className="admin-logout" onClick={logout}><LogOut size={17} /> Sign out</button>
+        <div className="admin-sidebar-account">
+          <span className="admin-sidebar-account-icon"><ShieldCheck size={16} /></span>
+          <span className="admin-sidebar-account-copy"><strong>{adminIdentity || 'Administrator'}</strong><small>Admin account</small></span>
+          <button className="admin-logout" onClick={logout} aria-label="Sign out"><LogOut size={17} /><span>Sign out</span></button>
+        </div>
       </aside>
       <main className="admin-main">
         {error && <p className="admin-alert" role="alert">{error}</p>}

@@ -154,12 +154,13 @@ Keep domain forms and view models typed against the shared API contract. Avoid d
 
 ### Contact and interests
 
-- “I’m interested” action.
-- Persistent interest status and withdrawal.
+- Automatically record interest before authorized WhatsApp handoff; block
+  handoff and offer retry if registration fails.
+- Persistent, idempotent interest registration and withdrawal.
 - Owner interest list with public seeker summary, tags, and timestamp.
+- Show active listing interests in the owner's My Listings view.
 - Protected contact eligibility check.
 - WhatsApp handoff screen and external navigation for both room-available and room-needed listing creators.
-- Show the interest action only for room-available listings.
 - Ineligible state with clear profile-completion action.
 
 ### Room-holder listing flow
@@ -202,7 +203,7 @@ Keep domain forms and view models typed against the shared API contract. Avoid d
 - Optional explanatory text only if supported by the API contract.
 - Submitted confirmation.
 - Restricted/unavailable listing state.
-- Moderator UI only for the agreed launch scope.
+- Admin-only moderation UI if moderation is handled through the product at launch.
 
 ## 7. Responsive requirements
 
@@ -310,8 +311,8 @@ Known scope boundaries:
 - Draft persistence is explicit through the Save draft action; it is not
   autosaved while typing.
 - Cloudinary uploads require the backend provider credentials to be configured.
-- Vitest is configured, but this frontend currently has no test files. Add
-  component/API integration tests and browser end-to-end coverage before treating
+- Vitest covers API helpers and frontend mapping/redirect behavior; component
+  integration and browser end-to-end coverage remain to be added before treating
   the frontend completion gates above as satisfied.
 - Full flow validation still requires a running API, a seeded account with a
   complete profile, active institution/area catalog records, and configured

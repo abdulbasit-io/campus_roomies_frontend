@@ -138,6 +138,24 @@ export type OwnedDraft = {
   images?: DraftImage[];
 };
 
+export type ListingInterest = {
+  id: string;
+  seekerId: string;
+  displayName: string;
+  photoUrl: string | null;
+  institution: string | null;
+  department: string | null;
+  academicLevel: string | null;
+  about: string | null;
+  roommateGender: string | null;
+  preferredAcademicLevel: string | null;
+  studyAtmosphere: string | null;
+  smokingRule: string | null;
+  utilityPreference: string | null;
+  lifestyleTraits: string[];
+  createdAt: string;
+};
+
 export type ImageBatchResult = {
   uploaded: DraftImage[];
   failures: Array<{ index: number; message: string }>;
@@ -288,6 +306,10 @@ export function getDraft(): Promise<OwnedDraft | null> {
 
 export function listMyListings(): Promise<OwnedDraft[]> {
   return apiRequest('/me/listings');
+}
+
+export function getListingInterests(id: string): Promise<ListingInterest[]> {
+  return apiRequest(`/listings/${id}/interests`);
 }
 
 export function createDraft(input: ListingDraftInput): Promise<OwnedDraft> {
