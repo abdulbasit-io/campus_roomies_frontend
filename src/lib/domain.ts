@@ -19,6 +19,8 @@ export type Listing = {
   features: string[];
   owner: string;
   ownerInitials: string;
+  ownerUserId?: string;
+  ownerPhotoUrl?: string | null;
 };
 
 export const sampleListings: Listing[] = [

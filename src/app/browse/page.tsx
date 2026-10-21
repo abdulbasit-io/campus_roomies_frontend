@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { Header, Footer } from '@/components/site-chrome';
 import { ListingCard } from '@/components/listing-card';
@@ -13,6 +13,7 @@ export default function BrowsePage() {
 }
 
 function BrowseContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const requestedInstitutionId = searchParams.get('institutionId') ?? '';
   const requestedArea = searchParams.get('area') ?? '';
@@ -34,22 +35,24 @@ function BrowseContent() {
   }, []);
 
   useEffect(() => {
-    if (requestedInstitutionId) {
-      setInstitutionId(requestedInstitutionId);
-      return;
+    if (!requestedInstitutionId && !institutionId && institutions.length === 1) {
+      setInstitutionId(institutions[0].id);
     }
-    if (!institutionId && institutions.length === 1) setInstitutionId(institutions[0].id);
+    if (requestedInstitutionId && requestedInstitutionId !== institutionId) {
+      setInstitutionId(requestedInstitutionId);
+    }
   }, [institutionId, institutions, requestedInstitutionId]);
 
   useEffect(() => {
     if (!institutionId) {
       setAreas([]);
+      setAreaId('');
       return;
     }
     listAreas(institutionId).then((items) => {
       setAreas(items);
       if (areaId && !items.some((item) => item.id === areaId)) setAreaId('');
-      if (requestedArea) {
+      if (requestedArea && (!areaId || areaId === '')) {
         const match = items.find((item) => item.name.toLowerCase() === requestedArea.toLowerCase());
         if (match) setAreaId(match.id);
       }
@@ -79,10 +82,11 @@ function BrowseContent() {
     setAreaId('');
     setIntent('');
     setPage(1);
+    router.push('/browse');
   }
 
   return <><Header /><main className="browse-page shell">
-    <div className="browse-header"><div><p className="eyebrow">Student housing</p><h1>Rooms around your campus</h1><p>Browse spaces with enough detail to imagine your everyday there.</p></div><span className="catalog-pill">Live listings</span></div>
+    <div className="browse-header"><div><h1>Rooms around your campus</h1><p>Browse spaces with enough detail to imagine your everyday there.</p></div><span className="catalog-pill">Live listings</span></div>
     <div className="filter-bar">
       <label>Institution<select value={institutionId} onChange={(event) => { setInstitutionId(event.target.value); setAreaId(''); setPage(1); }}><option value="">All institutions</option>{institutions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       <label>Area<select value={areaId} onChange={(event) => { setAreaId(event.target.value); setPage(1); }} disabled={!institutionId}><option value="">All areas</option>{areas.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}</select></label>

@@ -19,7 +19,7 @@ export function ListingCard({ listing, compact = false }: { listing: Listing; co
         <p className="listing-price">{formatNaira(listing.price)} <small>/ {listing.period}</small></p>
         <p className="listing-location"><MapPin size={13} /> {listing.area} · {listing.institution}</p>
         {listing.features.length > 0 && <div className="tag-row">{listing.features.map((feature) => <span className="tag" key={feature}>{feature}</span>)}</div>}
-        {!compact && <div className="listing-owner"><span className="owner-avatar">{listing.ownerInitials}</span><span>{listing.owner}</span><Link className="button button-small button-quiet" href={`/listings/${listing.id}`}>View room</Link></div>}
+        {!compact && <div className="listing-owner"><Link className="owner-link" href={listing.ownerUserId ? `/users/${listing.ownerUserId}` : `/listings/${listing.id}`}><span className="owner-avatar" style={listing.ownerPhotoUrl ? { backgroundImage: `url("${listing.ownerPhotoUrl}")` } : undefined}>{!listing.ownerPhotoUrl && listing.ownerInitials}</span></Link><Link className="owner-name" href={listing.ownerUserId ? `/users/${listing.ownerUserId}` : `/listings/${listing.id}`}>{listing.owner}</Link><Link className="button button-small button-quiet" href={`/listings/${listing.id}`}>View room</Link></div>}
       </div>
     </article>
   );

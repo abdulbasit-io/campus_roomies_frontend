@@ -158,7 +158,8 @@ Keep domain forms and view models typed against the shared API contract. Avoid d
 - Persistent interest status and withdrawal.
 - Owner interest list with public seeker summary, tags, and timestamp.
 - Protected contact eligibility check.
-- WhatsApp handoff screen and external navigation.
+- WhatsApp handoff screen and external navigation for both room-available and room-needed listing creators.
+- Show the interest action only for room-available listings.
 - Ineligible state with clear profile-completion action.
 
 ### Room-holder listing flow

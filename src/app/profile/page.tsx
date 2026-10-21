@@ -75,7 +75,6 @@ export default function ProfilePage() {
       <main className="profile-dashboard shell">
         <div className="profile-dashboard-heading">
           <div>
-            <p className="eyebrow">Your account</p>
             <h1>Your profile</h1>
             <p>Manage your details and keep track of your Campus Roomies activity.</p>
           </div>
@@ -103,7 +102,6 @@ export default function ProfilePage() {
                     {!profile.photoUrl && profile.firstName.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="eyebrow">Student profile</p>
                     <h2>{profile.firstName} {profile.lastName}</h2>
                     <p>{profile.department || 'Add your department'}</p>
                   </div>
@@ -173,7 +171,6 @@ export default function ProfilePage() {
             <section className="profile-listings-section">
               <div className="profile-listings-heading">
                 <div>
-                  <p className="eyebrow">Your activity</p>
                   <h2>My listings</h2>
                   <p>Manage rooms you have listed or searches you have shared.</p>
                 </div>

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Bookmark, ChevronDown, CircleUserRound, FileText, Home, LogOut, Plus, UserRound } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { logout } from '@/lib/frontend-api';
 import { useSession } from '@/lib/session';
@@ -15,6 +15,7 @@ export function Logo() {
 
 export function Header() {
   const pathname = usePathname();
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [logoutError, setLogoutError] = useState('');
   const [currentPath, setCurrentPath] = useState<string | null>(null);
@@ -27,6 +28,17 @@ export function Header() {
     }
     setCurrentPath(`${pathname}${window.location.search}`);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handlePointerDown(event: MouseEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [menuOpen]);
 
   async function handleLogout() {
     setLogoutError('');
@@ -52,9 +64,9 @@ export function Header() {
           {!profile && <Link className="text-link desktop-only" href={authLink('/login', currentPath)}>Log in</Link>}
           <Link className="button button-small" href="/listings/new">List a room</Link>
           <ThemeToggle />
-          <button className="account-trigger" aria-expanded={menuOpen} aria-haspopup="menu" onClick={() => setMenuOpen((open) => !open)}><span className="avatar-button"><CircleUserRound size={18} /></span><ChevronDown size={14} className="desktop-only" /></button>
-          {menuOpen && <div className="account-menu" role="menu">
-            <div className="account-menu-heading"><span className="avatar-button">{profile?.firstName.slice(0, 1) ?? 'A'}</span><div><strong>{profile ? `${profile.firstName} ${profile.lastNameInitial}.` : 'Your account'}</strong><small>{profile ? 'Student profile' : 'Sign in to manage your account'}</small></div></div>
+          <button className="account-trigger" aria-expanded={menuOpen} aria-haspopup="menu" onClick={() => setMenuOpen((open) => !open)}><span className="avatar-button" style={profile?.photoUrl ? { backgroundImage: `url("${profile.photoUrl}")` } : undefined}>{!profile?.photoUrl && <CircleUserRound size={18} />}</span><ChevronDown size={14} className="desktop-only" /></button>
+          {menuOpen && <div ref={menuRef} className="account-menu" role="menu">
+            <div className="account-menu-heading"><span className="avatar-button" style={profile?.photoUrl ? { backgroundImage: `url("${profile.photoUrl}")` } : undefined}>{!profile?.photoUrl && (profile?.firstName.slice(0, 1) ?? 'A')}</span><div><strong>{profile ? `${profile.firstName} ${profile.lastNameInitial}.` : 'Your account'}</strong><small>{profile ? 'Student profile' : 'Sign in to manage your account'}</small></div></div>
             {profile ? <>
               <Link role="menuitem" href="/profile" onClick={() => setMenuOpen(false)}><UserRound size={16} /> Profile</Link>
               <Link role="menuitem" href="/listings/new" onClick={() => setMenuOpen(false)}><Plus size={16} /> Create a listing</Link>

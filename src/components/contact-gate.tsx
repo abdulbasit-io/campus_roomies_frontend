@@ -6,29 +6,33 @@ import { useSession } from '@/lib/session';
 import { createInterest, withdrawInterest } from '@/lib/frontend-api';
 import { authLink } from '@/lib/redirect';
 import { useState } from 'react';
+import type { ListingIntent } from '@/lib/domain';
 
-export function ContactGate({ listingId }: { listingId: string }) {
+export function ContactGate({ listingId, intent }: { listingId: string; intent: ListingIntent }) {
   const { profile, ready } = useSession();
-  const [interested, setInterested] = useState(false);
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
-  async function toggleInterest() {
-    setPending(true);
-    setError('');
-    try {
-      if (interested) await withdrawInterest(listingId);
-      else await createInterest(listingId);
-      setInterested(!interested);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to update interest.');
-    } finally {
-      setPending(false);
-    }
-  }
+
   if (!ready) return <div className="contact-loading">Checking contact access…</div>;
   const contactPath = `/listings/${listingId}/contact`;
   if (!profile) return <Link className="button full-width" href={authLink('/login', contactPath)}><LockKeyhole size={15} /> Sign in to contact</Link>;
   if (!profile.profileComplete) return <Link className="button full-width" href={authLink('/profile/complete', contactPath)}><CheckCircle2 size={15} /> Complete your profile</Link>;
   if (!profile.phoneConfirmed) return <Link className="button full-width" href={authLink('/profile/complete', contactPath)}><MessageCircle size={15} /> Confirm your WhatsApp number</Link>;
-  return <><button className="button button-secondary full-width" onClick={toggleInterest} disabled={pending}>{pending ? 'Updating…' : interested ? 'Interested · Undo' : 'I’m interested'}</button>{error && <p className="form-error" role="alert">{error}</p>}<Link className="button full-width" href={`/listings/${listingId}/contact`}><MessageCircle size={15} /> Continue to WhatsApp <ArrowRight size={15} /></Link></>;
+
+  async function handleContinue() {
+    setPending(true);
+    setError('');
+    try {
+      await createInterest(listingId);
+      window.location.assign(`/listings/${listingId}/contact`);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Unable to register your interest.';
+      setError(message);
+      window.location.assign(`/listings/${listingId}/contact`);
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return <><p className="muted-copy">Your interest is recorded automatically when you continue to WhatsApp.</p>{error && <p className="form-error" role="alert">{error}</p>}<button className="button full-width" onClick={handleContinue} disabled={pending}>{pending ? 'Recording interest…' : `Continue to WhatsApp`}</button></>;
 }

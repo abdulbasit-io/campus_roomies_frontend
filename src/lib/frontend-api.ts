@@ -24,6 +24,7 @@ export type ListingPreferences = {
 
 export type ApiListing = {
   id: string;
+  ownerId?: string;
   intent: ListingIntent;
   institutionId: string;
   institution: string;
@@ -160,6 +161,13 @@ function readable(value: string | null | undefined): string {
   return value.toLowerCase().split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
 }
 
+function formatAvailabilityValue(listing: ApiListing): string {
+  if (listing.availabilityType === 'SPECIFIC_DATE' && listing.availabilityDate) {
+    return new Date(`${listing.availabilityDate}T00:00:00`).toLocaleDateString();
+  }
+  return readable(listing.availabilityType);
+}
+
 function seekerAvailability(listing: ApiListing): string {
   if (listing.availabilityType === 'SPECIFIC_DATE' && listing.availabilityDate) {
     return `Looking from ${new Date(`${listing.availabilityDate}T00:00:00`).toLocaleDateString()}`;
@@ -189,14 +197,16 @@ export function toCardListing(listing: ApiListing): Listing {
       : readable(listing.accommodationType),
     availability: listing.intent === 'ROOM_NEEDED'
       ? seekerAvailability(listing)
-      : readable(listing.availabilityType),
+      : formatAvailabilityValue(listing),
     description: listing.description,
     image: listing.images?.[0]?.url
-      ?? (listing.intent === 'ROOM_NEEDED' ? listing.ownerPhotoUrl ?? fallbackImage : fallbackImage),
+      ?? (listing.ownerPhotoUrl ?? fallbackImage),
     distance: listing.landmark ?? '',
     features,
     owner: listing.ownerDisplayName ?? 'Campus Roomies member',
     ownerInitials: listing.ownerInitials ?? 'CR',
+    ownerUserId: listing.ownerId,
+    ownerPhotoUrl: listing.ownerPhotoUrl ?? null,
   };
 }
 
@@ -378,6 +388,20 @@ export function removeDraftImage(listingId: string, imageId: string): Promise<{ 
 
 export function createInterest(id: string): Promise<{ id: string; listingId: string }> {
   return apiMutation(`/listings/${id}/interests`, 'POST');
+}
+
+export function getPublicProfile(userId: string): Promise<{
+  userId: string;
+  firstName: string;
+  lastName: string;
+  lastNameInitial: string;
+  photoUrl: string | null;
+  institutionName?: string | null;
+  department?: string | null;
+  academicLevel?: string | null;
+  about?: string | null;
+}> {
+  return apiRequest(`/users/${userId}/public`);
 }
 
 export function withdrawInterest(id: string): Promise<{ id: string; listingId: string }> {

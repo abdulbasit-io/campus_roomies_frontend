@@ -8,7 +8,6 @@ export default async function NewListingPage({ searchParams }: { searchParams: P
     <>
       <Header />
       <main className="intent-entry shell">
-        <p className="eyebrow">Make yourself visible</p>
         <h1>What are you looking for?</h1>
         <p className="intent-entry-lede">Everyone here is looking for a roommate. Choose the path that describes your situation today.</p>
         <div className="intent-entry-grid">
