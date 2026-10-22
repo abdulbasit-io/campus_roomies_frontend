@@ -46,8 +46,77 @@ export type AdminDashboard = {
   recentActions: AdminAuditAction[];
 };
 
+export type ModerationReport = {
+  id: string;
+  listingId: string;
+  reporterId: string;
+  reason: 'SUSPICIOUS_LISTING' | 'MISLEADING_INFORMATION' | 'INAPPROPRIATE_CONTENT' | 'SAFETY_CONCERN' | 'OTHER';
+  details: string | null;
+  status: 'OPEN' | 'RESOLVED';
+  createdAt: string;
+  resolvedAt?: string | null;
+  resolvedBy?: string | null;
+  intent: 'ROOM_AVAILABLE' | 'ROOM_NEEDED';
+  title: string;
+  listingStatus: 'DRAFT' | 'ACTIVE' | 'FOUND' | 'RESTRICTED';
+};
+
+export type ModerationAuditAction = {
+  id: string;
+  listingId: string | null;
+  reportId: string | null;
+  action: 'RESTRICT' | 'RESTORE' | 'RESOLVE_REPORT' | 'MARK_FOUND';
+  reason: string | null;
+  createdAt: string;
+  listingTitle: string | null;
+  adminFirstName: string;
+  adminLastName: string;
+};
+
+export type QueuedAdminEmail = {
+  jobId: string;
+  status: 'QUEUED';
+};
+
+export type ModeratedListingResult = {
+  listingId: string;
+  status: 'ACTIVE' | 'RESTRICTED' | 'FOUND';
+};
+
 export const adminApi = {
   dashboard: () => apiRequest<AdminDashboard>('/admin/dashboard'),
+  reports: (page: number, pageSize = 20) => apiRequest<PaginatedResult<ModerationReport>>(
+    `/moderation/reports?page=${page}&pageSize=${pageSize}`,
+  ),
+  moderationAudit: (page: number, pageSize = 20) => apiRequest<PaginatedResult<ModerationAuditAction>>(
+    `/moderation/audit?page=${page}&pageSize=${pageSize}`,
+  ),
+  report: (reportId: string) => apiRequest<ModerationReport>(`/moderation/reports/${reportId}`),
+  restrictListing: (listingId: string, reason: string) => apiMutation<ModeratedListingResult>(
+    `/moderation/listings/${listingId}/restrict`,
+    'POST',
+    { reason },
+  ),
+  restoreListing: (listingId: string, reason: string) => apiMutation<ModeratedListingResult>(
+    `/moderation/listings/${listingId}/restore`,
+    'POST',
+    { reason },
+  ),
+  markListingFound: (listingId: string, reason: string) => apiMutation<ModeratedListingResult>(
+    `/moderation/listings/${listingId}/found`,
+    'POST',
+    { reason },
+  ),
+  resolveReport: (reportId: string, reason: string) => apiMutation<{ reportId: string; status: 'RESOLVED' }>(
+    `/moderation/reports/${reportId}/resolve`,
+    'POST',
+    { reason },
+  ),
+  queueEmail: (input: { recipient: string; subject: string; text: string }) => apiMutation<QueuedAdminEmail>(
+    '/moderation/emails',
+    'POST',
+    input,
+  ),
   listInstitutions: (includeArchived = false) => apiRequest<CatalogInstitution[]>(
     `/admin/institutions?includeArchived=${includeArchived}`,
   ),

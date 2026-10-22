@@ -69,19 +69,23 @@ Organize routes and components around product domains, not screenshot filenames.
 - Interest list.
 - Report flow.
 - Admin catalog-management experience, as a backend recommendation below.
+- Admin moderation report queue and report-review workflow.
 
 ### Admin catalog management
 
 The backend recommended a dedicated, role-protected admin area for maintaining
 the controlled institution and area catalog. The initial admin dashboard,
-catalog management, area management, audit view, and admin sign-in pages have
-now been implemented under `src/app/admin`.
+catalog management and audit views are implemented under `src/app/admin`.
 
 Routes and pages:
 
-- `/admin/login`: administrator sign-in.
-- `/admin`: dashboard with institution/area totals, recent catalog changes,
-  and links to catalog maintenance.
+- `/admin`: operations dashboard with institution/area totals, open report
+  count, recent catalog changes, and privileged-workflow shortcuts.
+- `/admin/moderation`: paginated open-report queue, ordered oldest first.
+- `/admin/moderation/reports/[reportId]`: report detail, listing context,
+  audited restrict/restore/found actions, and report resolution.
+- `/admin/moderation/audit`: paginated decisions and their administrator notes.
+- `/admin/communications`: queue one-off operational email messages.
 - `/admin/institutions`: searchable list showing abbreviation,
   active/archived state, area count, and create/edit/archive/restore actions.
 - `/admin/institutions/new`: institution creation form.
@@ -96,6 +100,12 @@ Frontend behavior should align with the backend contract:
 
 - Require an authenticated `ADMIN` role; hiding navigation is not
   authorization.
+- Keep all admin routes out of public navigation; redirect ordinary signed-in
+  users away from the admin suite and enforce authorization on every API.
+- Use the standard sign-in flow with a private return target rather than a
+  publicly linked administrator login page.
+- Require an administrator decision note for moderation actions and preserve
+  separate listing actions from report resolution.
 - Use CSRF-protected mutations and surface server validation/conflict errors.
 - Explain that archival preserves existing references while removing catalog
   records from public institution and area selectors.
@@ -103,7 +113,7 @@ Frontend behavior should align with the backend contract:
 - Validate and exercise the admin flows against a seeded administrator account
   and the PostgreSQL-backed API.
 - WhatsApp handoff.
-- Moderator interfaces only if the frontend is responsible for them in the first application.
+- Administrator interfaces remain separate from the public product navigation.
 
 Keep domain forms and view models typed against the shared API contract. Avoid duplicating backend enums or silently inventing client-only values.
 

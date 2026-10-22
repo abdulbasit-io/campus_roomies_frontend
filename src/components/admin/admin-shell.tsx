@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Activity, Building2, LayoutDashboard, LogOut, ShieldCheck } from 'lucide-react';
+import { Activity, Building2, ClipboardList, Flag, LayoutDashboard, LogOut, Mail, ShieldCheck } from 'lucide-react';
 import { Logo } from '@/components/site-chrome';
 import { ApiRequestError, apiMutation, apiRequest } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -12,16 +12,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { signOut } = useSession();
-  const loginPage = pathname === '/admin/login';
-  const [authorized, setAuthorized] = useState(loginPage ? true : false);
+  const [authorized, setAuthorized] = useState(false);
   const [error, setError] = useState('');
   const [adminIdentity, setAdminIdentity] = useState('');
 
   useEffect(() => {
-    if (loginPage) {
-      setAuthorized(true);
-      return;
-    }
+    setAuthorized(false);
+    setError('');
     let active = true;
     apiRequest<{
       userId: string;
@@ -34,7 +31,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     }>('/auth/session').then((profile) => {
       if (!active) return;
       if (profile.role !== 'ADMIN') {
-        setError('This account does not have administrator access.');
+        router.replace('/');
         return;
       }
       setAdminIdentity(`${profile.firstName} ${profile.lastNameInitial}`);
@@ -42,32 +39,31 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     }).catch((cause: unknown) => {
       if (!active) return;
       if (cause instanceof ApiRequestError && cause.status === 401) {
-        router.replace('/admin/login');
+        router.replace(`/login?next=${encodeURIComponent(pathname)}`);
         return;
       }
       setError(cause instanceof Error ? cause.message : 'Unable to verify administrator access.');
     });
     return () => { active = false; };
-  }, [loginPage, router]);
+  }, [pathname, router]);
 
   async function logout() {
     try {
       await apiMutation('/auth/logout', 'POST');
       signOut();
-      router.replace('/admin/login');
+      router.replace('/login');
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to sign out.');
     }
   }
 
-  if (loginPage) return <>{children}</>;
   if (!authorized) {
     return (
       <main className="admin-access-state" role={error ? 'alert' : 'status'}>
-        {error || 'Checking administrator access…'}
+        {error || 'Checking access…'}
         {error && <>
-          <Link className="button button-small" href="/admin/login">Sign in as administrator</Link>
-          <button className="admin-action-link" onClick={logout}>Sign out of this account</button>
+          <Link className="button button-small" href={`/login?next=${encodeURIComponent(pathname)}`}>Sign in</Link>
+          <button className="admin-action-link" onClick={logout}>Sign out</button>
         </>}
       </main>
     );
@@ -80,6 +76,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <p className="admin-sidebar-label">Administration</p>
         <nav aria-label="Admin navigation">
           <Link href="/admin" aria-current={pathname === '/admin' ? 'page' : undefined} aria-label="Overview"><LayoutDashboard size={17} /><span>Overview</span></Link>
+          <Link href="/admin/moderation" aria-current={pathname === '/admin/moderation' || pathname.startsWith('/admin/moderation/reports') ? 'page' : undefined} aria-label="Moderation"><Flag size={17} /><span>Moderation</span></Link>
+          <Link href="/admin/moderation/audit" aria-current={pathname === '/admin/moderation/audit' ? 'page' : undefined} aria-label="Moderation audit"><ClipboardList size={17} /><span>Moderation audit</span></Link>
+          <Link href="/admin/communications" aria-current={pathname.startsWith('/admin/communications') ? 'page' : undefined} aria-label="Communications"><Mail size={17} /><span>Communications</span></Link>
           <Link href="/admin/institutions" aria-current={pathname.startsWith('/admin/institutions') ? 'page' : undefined} aria-label="Institutions"><Building2 size={17} /><span>Institutions</span></Link>
           <Link href="/admin/audit" aria-current={pathname.startsWith('/admin/audit') ? 'page' : undefined} aria-label="Audit history"><Activity size={17} /><span>Audit history</span></Link>
         </nav>

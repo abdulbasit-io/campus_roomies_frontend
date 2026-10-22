@@ -28,11 +28,14 @@ export default function LoginPage() {
     try {
       const profile = await login(email, password);
       signIn(profile);
-      router.replace(getLocalRedirectTarget(
+      const redirectTarget = getLocalRedirectTarget(
         new URLSearchParams(window.location.search).get('next'),
         '/browse',
         window.location.origin,
-      ));
+      );
+      router.replace(profile.role === 'USER' && redirectTarget.startsWith('/admin')
+        ? '/browse'
+        : redirectTarget);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to sign in.');
     } finally {
