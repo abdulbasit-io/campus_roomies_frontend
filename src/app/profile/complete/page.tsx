@@ -91,8 +91,8 @@ export default function CompleteProfilePage() {
   }
 
   return <><Header /><main className="auth-page shell"><form className="auth-card" onSubmit={submit}>
-    <p className="eyebrow">Profile completion</p><h1>A little context goes a long way.</h1>
-    <p className="auth-copy">{profile ? `Hi ${profile.firstName}, add the details students need before connecting.` : 'Loading your account profile…'}</p>
+    <h1>A little context goes a long way.</h1>
+    <p className="auth-copy">{profile ? `Hi ${profile.firstName}, add the details students need before connecting.` : 'Loading your account profile…'}</p><br/>
     <div className="profile-photo-control">
       <div className="profile-photo-preview" role="img" aria-label={profile?.photoUrl ? 'Your profile picture' : 'No profile picture selected'} style={profile?.photoUrl ? { backgroundImage: `url("${profile.photoUrl}")` } : undefined}>
         {!profile?.photoUrl && profile?.firstName?.charAt(0).toUpperCase()}

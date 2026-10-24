@@ -224,7 +224,7 @@ export function SeekerWizard() {
         <Header />
         <main className="success-page shell">
           <div className="success-icon">✓</div>
-          <p className="eyebrow">{published ? 'Room-needed listing published' : 'Room-needed draft saved'}</p>
+          <p className="eyebrow">{published ? 'Listing published' : 'Draft saved'}</p>
           <h1>{published ? 'Your search is now visible to potential roommates.' : 'The right room may find you next.'}</h1>
           <p>{published ? 'Students with suitable rooms can now discover your search.' : 'Your progress is saved. Complete your profile when you are ready to publish and become visible to people with suitable rooms.'}</p>
           <div className="success-actions"><Link className="button" href="/profile/listings">Manage my listings</Link><Link className="button button-secondary" href="/browse">Browse rooms</Link></div>
