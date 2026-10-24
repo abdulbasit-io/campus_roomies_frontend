@@ -7,6 +7,7 @@ import { Header, Footer } from '@/components/site-chrome';
 import { ListingCard } from '@/components/listing-card';
 import { Institution, InstitutionArea, searchListings, listAreas, listInstitutions, toCardListing } from '@/lib/frontend-api';
 import type { Listing } from '@/lib/domain';
+import { trackAnalyticsEvent } from '@/lib/analytics';
 
 export default function BrowsePage() {
   return <Suspense fallback={<main className="browse-page shell"><p className="contact-loading" role="status">Loading listings…</p></main>}><BrowseContent /></Suspense>;
@@ -88,9 +89,9 @@ function BrowseContent() {
   return <><Header /><main className="browse-page shell">
     <div className="browse-header"><div><h1>Rooms around your campus</h1><p>Browse spaces with enough detail to imagine your everyday there.</p></div><span className="catalog-pill">Live listings</span></div>
     <div className="filter-bar">
-      <label>Institution<select value={institutionId} onChange={(event) => { setInstitutionId(event.target.value); setAreaId(''); setPage(1); }}><option value="">All institutions</option>{institutions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-      <label>Area<select value={areaId} onChange={(event) => { setAreaId(event.target.value); setPage(1); }} disabled={!institutionId}><option value="">All areas</option>{areas.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}</select></label>
-      <label>Listing type<select value={intent} onChange={(event) => { setIntent(event.target.value); setPage(1); }}><option value="">All listing types</option><option value="ROOM_AVAILABLE">Room available</option><option value="ROOM_NEEDED">Room needed</option></select></label>
+      <label>Institution<select value={institutionId} onChange={(event) => { const value = event.target.value; setInstitutionId(value); setAreaId(''); setPage(1); void trackAnalyticsEvent('SEARCH_PERFORMED', { ...(value ? { institutionId: value } : {}) }); }}><option value="">All institutions</option>{institutions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+      <label>Area<select value={areaId} onChange={(event) => { setAreaId(event.target.value); setPage(1); void trackAnalyticsEvent('SEARCH_PERFORMED', { ...(institutionId ? { institutionId } : {}), ...(intent ? { intent: intent as 'ROOM_AVAILABLE' | 'ROOM_NEEDED' } : {}) }); }} disabled={!institutionId}><option value="">All areas</option>{areas.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}</select></label>
+      <label>Listing type<select value={intent} onChange={(event) => { const value = event.target.value; setIntent(value); setPage(1); void trackAnalyticsEvent('SEARCH_PERFORMED', { ...(institutionId ? { institutionId } : {}), ...(value ? { intent: value as 'ROOM_AVAILABLE' | 'ROOM_NEEDED' } : {}) }); }}><option value="">All listing types</option><option value="ROOM_AVAILABLE">Room available</option><option value="ROOM_NEEDED">Room needed</option></select></label>
       <button className="filter-reset" onClick={reset}>Reset filters</button>
     </div>
     <div className="results-summary"><span>{loading ? 'Loading listings…' : `${total} spaces to explore`}</span><span>Newest first · Page {page}</span></div>

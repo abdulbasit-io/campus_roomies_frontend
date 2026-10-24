@@ -3,6 +3,7 @@
 import { Heart } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { readStoredIds, savedListingsKey, writeStoredIds } from '@/lib/local-store';
+import { trackAnalyticsEvent } from '@/lib/analytics';
 
 export function SaveButton({ listingId, compact = false }: { listingId: string; compact?: boolean }) {
   const [saved, setSaved] = useState(false);
@@ -15,6 +16,7 @@ export function SaveButton({ listingId, compact = false }: { listingId: string; 
   return <button className={compact ? 'heart' : 'button button-secondary full-width'} aria-label={saved ? 'Remove from saved rooms' : 'Save listing'} onClick={() => {
     const ids = readStoredIds(savedListingsKey);
     writeStoredIds(savedListingsKey, saved ? ids.filter((id) => id !== listingId) : [...new Set([...ids, listingId])]);
+    if (!saved) void trackAnalyticsEvent('LISTING_SAVED', { listingId });
     setSaved(!saved);
   }}><Heart size={compact ? 17 : 15} fill={saved ? 'currentColor' : 'none'} />{!compact && (saved ? 'Saved' : 'Save listing')}</button>;
 }

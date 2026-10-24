@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { DraftImage, Institution, InstitutionArea, createDraft, getDraft, listAreas, listInstitutions, ListingDraftInput, publishDraft, removeDraftImage, updateDraft, uploadDraftImages } from '@/lib/frontend-api';
 import { useSession } from '@/lib/session';
+import { trackAnalyticsEvent } from '@/lib/analytics';
 
 const steps = ['Details', 'Preferences', 'Photos', 'Review'];
 const roomTypes = [
@@ -234,6 +235,11 @@ export function ListingWizard() {
     try {
       const id = await persistDraft();
       await publishDraft(id);
+      void trackAnalyticsEvent('LISTING_PUBLISHED', {
+        listingId: id,
+        intent: 'ROOM_AVAILABLE',
+        ...(institutionId ? { institutionId } : {}),
+      });
       setIsPublished(true);
       setPublished(true);
     } catch (cause) {
@@ -289,6 +295,13 @@ export function ListingWizard() {
         const result = await uploadDraftImages(id, pendingPhotos, firstPosition, (completed, total) => {
           setUploadProgress({ completed, total });
         });
+        if (result.uploaded.length) {
+          void trackAnalyticsEvent('LISTING_PHOTO_ADDED', {
+            listingId: id,
+            intent: 'ROOM_AVAILABLE',
+            ...(institutionId ? { institutionId } : {}),
+          });
+        }
         setPhotos((current) => [...current, ...result.uploaded].sort((a, b) => a.position - b.position));
         setPendingPhotos((current) => result.failures.map(({ index }) => current[index]));
         if (result.failures.length) {

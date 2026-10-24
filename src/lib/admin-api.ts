@@ -46,6 +46,51 @@ export type AdminDashboard = {
   recentActions: AdminAuditAction[];
 };
 
+export type AdminAnalytics = {
+  days: number;
+  summary: {
+    totalUsers: number;
+    newUsers: number;
+    activeUsers: number;
+    visitors: number;
+    activeListings: number;
+    activeRoomListings: number;
+    activeSeekerListings: number;
+    interests: number;
+    handoffs: number;
+    whatsappOpens: number;
+    publishedListings: number;
+    totalHandoffs: number;
+    searches: number;
+    savedListings: number;
+    listingDrafts: number;
+    photosAdded: number;
+  };
+  funnel: Array<{
+    eventName: string;
+    label: string;
+    sessions: number;
+    conversionFromPrevious: number | null;
+  }>;
+  breakdowns: {
+    institution: AnalyticsBreakdown[];
+    listingIntent: AnalyticsBreakdown[];
+    acquisitionSource: AnalyticsBreakdown[];
+    device: AnalyticsBreakdown[];
+  };
+  limitations: {
+    handoff: string;
+    activeUsers: string;
+    funnel: string;
+  };
+};
+
+export type AnalyticsBreakdown = {
+  label: string;
+  events: number;
+  sessions: number;
+};
+
 export type ModerationReport = {
   id: string;
   listingId: string;
@@ -95,6 +140,7 @@ export type AdminFeedback = {
 
 export const adminApi = {
   dashboard: () => apiRequest<AdminDashboard>('/admin/dashboard'),
+  analytics: (days: 7 | 30 | 90) => apiRequest<AdminAnalytics>(`/admin/analytics?days=${days}`),
   reports: (page: number, pageSize = 20) => apiRequest<PaginatedResult<ModerationReport>>(
     `/moderation/reports?page=${page}&pageSize=${pageSize}`,
   ),

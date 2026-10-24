@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Activity, Building2, ClipboardList, Flag, LayoutDashboard, LogOut, Mail, MessageSquare, ShieldCheck } from 'lucide-react';
+import { Activity, BarChart3, Building2, ClipboardList, Flag, LayoutDashboard, LogOut, Mail, MessageSquare, ShieldCheck } from 'lucide-react';
 import { Logo } from '@/components/site-chrome';
 import { ApiRequestError, apiMutation, apiRequest } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -76,6 +76,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <p className="admin-sidebar-label">Administration</p>
         <nav aria-label="Admin navigation">
           <Link href="/admin" aria-current={pathname === '/admin' ? 'page' : undefined} aria-label="Overview"><LayoutDashboard size={17} /><span>Overview</span></Link>
+          <Link href="/admin/analytics" aria-current={pathname.startsWith('/admin/analytics') ? 'page' : undefined} aria-label="Analytics"><BarChart3 size={17} /><span>Analytics</span></Link>
           <Link href="/admin/moderation" aria-current={pathname === '/admin/moderation' || pathname.startsWith('/admin/moderation/reports') ? 'page' : undefined} aria-label="Moderation"><Flag size={17} /><span>Moderation</span></Link>
           <Link href="/admin/moderation/audit" aria-current={pathname === '/admin/moderation/audit' ? 'page' : undefined} aria-label="Moderation audit"><ClipboardList size={17} /><span>Moderation audit</span></Link>
           <Link href="/admin/feedback" aria-current={pathname.startsWith('/admin/feedback') ? 'page' : undefined} aria-label="Feedback inbox"><MessageSquare size={17} /><span>Feedback inbox</span></Link>

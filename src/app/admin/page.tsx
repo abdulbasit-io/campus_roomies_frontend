@@ -26,7 +26,7 @@ export default function AdminDashboardPage() {
     <div className="admin-page">
       <div className="admin-page-heading">
         <div><p className="eyebrow">Campus Roomies administration</p><h1>Operations overview</h1><p className="admin-muted">Manage platform listings, reports, and catalog activity.</p></div>
-        <Link className="button" href="/admin/moderation">Review reports <ArrowRight size={16} /></Link>
+        <div className="admin-heading-actions"><Link className="button button-secondary" href="/admin/analytics">View analytics <ArrowRight size={16} /></Link><Link className="button" href="/admin/moderation">Review reports <ArrowRight size={16} /></Link></div>
       </div>
       {error && <p className="admin-alert" role="alert">{error}</p>}
       {reportsError && <p className="admin-alert" role="alert">Unable to load the open report count: {reportsError}</p>}
