@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Flag, MapPin } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Flag, MapPin, X } from 'lucide-react';
 import { Header, Footer } from '@/components/site-chrome';
 import { ContactGate } from '@/components/contact-gate';
 import { ListingCard } from '@/components/listing-card';
@@ -11,6 +11,7 @@ import { SaveButton } from '@/components/save-button';
 import { ApiRequestError } from '@/lib/api';
 import { ApiListing, getOwnedListing, getPublicListing, searchListings, toCardListing } from '@/lib/frontend-api';
 import { formatNaira, Listing } from '@/lib/domain';
+import { ResilientImage } from '@/components/resilient-image';
 
 function preferenceLabel(key: keyof NonNullable<ApiListing['preferences']>, value: string | null | undefined) {
   if (!value) return null;
@@ -46,6 +47,16 @@ export default function ListingDetailsPage() {
   const [error, setError] = useState('');
   const [unavailable, setUnavailable] = useState(false);
   const [ownerView, setOwnerView] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (selectedPhoto === null) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setSelectedPhoto(null);
+    }
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [selectedPhoto]);
 
   useEffect(() => {
     setListing(null);
@@ -110,9 +121,20 @@ export default function ListingDetailsPage() {
     <Link className="back-link" href="/browse"><ArrowLeft size={14} /> Back to rooms</Link>
     <div className="details-grid"><div>
       <div className="details-gallery">
-        <div className="gallery-main" style={photos[0] ? { backgroundImage: `url("${photos[0]}")` } : undefined} />
-        <div className="gallery-thumbs">{[1, 2, 3].map((index) => <div key={index} style={photos[index] ? { backgroundImage: `url("${photos[index]}")` } : undefined} />)}</div>
+        <button className="gallery-main" type="button" onClick={() => photos[0] && setSelectedPhoto(0)} disabled={!photos[0]} aria-label="View full-size listing photo">
+          {photos[0] && <ResilientImage src={photos[0]} alt={`${listing.title} photo 1`} className="gallery-resilient-image" sizes="(max-width: 850px) 100vw, 70vw" />}
+        </button>
+        <div className="gallery-thumbs">{[1, 2, 3].map((index) => <button key={index} type="button" onClick={() => photos[index] && setSelectedPhoto(index)} disabled={!photos[index]} aria-label={`View full-size listing photo ${index + 1}`}>
+          {photos[index] && <ResilientImage src={photos[index]} alt={`${listing.title} photo ${index + 1}`} className="gallery-resilient-image" sizes="(max-width: 850px) 25vw, 110px" />}
+        </button>)}</div>
       </div>
+      {selectedPhoto !== null && photos[selectedPhoto] && <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label={`Listing photo ${selectedPhoto + 1} of ${photos.length}`}>
+        <button className="photo-lightbox-close" type="button" onClick={() => setSelectedPhoto(null)} aria-label="Close photo viewer"><X size={22} /></button>
+        {selectedPhoto > 0 && <button className="photo-lightbox-nav photo-lightbox-prev" type="button" onClick={() => setSelectedPhoto((current) => current === null ? null : current - 1)} aria-label="Previous photo"><ChevronLeft size={28} /></button>}
+        <ResilientImage src={photos[selectedPhoto]} alt={`${listing.title} photo ${selectedPhoto + 1}`} className="photo-lightbox-image" sizes="100vw" />
+        {selectedPhoto < photos.length - 1 && <button className="photo-lightbox-nav photo-lightbox-next" type="button" onClick={() => setSelectedPhoto((current) => current === null ? null : current + 1)} aria-label="Next photo"><ChevronRight size={28} /></button>}
+        <span className="photo-lightbox-count">{selectedPhoto + 1} / {photos.length}</span>
+      </div>}
       <div className="details-heading"><div><p className="eyebrow">{card.roomType} · {card.availability}</p><h1>{listing.title}</h1><p className="details-location"><MapPin size={14} /> {listing.institution} · {listing.area}{listing.landmark ? ` · ${listing.landmark}` : ''}</p></div><span className={`soft-badge listing-status-badge ${isActiveListing ? 'is-active' : 'is-unavailable'}`}>{statusLabels[listing.status] ?? 'Unavailable listing'}</span></div>
       <section className="content-card"><h2>{listing.intent === 'ROOM_NEEDED' ? 'About this seeker' : 'About this place'}</h2><p>{listing.intent === 'ROOM_NEEDED' ? listing.about ?? listing.description : listing.description}</p>{listing.intent === 'ROOM_NEEDED' && listing.targetArea && <p className="muted">Preferred area: {listing.targetArea}</p>}{card.features.length > 0 && <div className="tag-row">{card.features.map((feature) => <span className="tag" key={feature}>{feature}</span>)}</div>}</section>
       {(preferenceEntries.length > 0 || preferences.lifestyleTraits?.length) && <section className="content-card"><h2>Living preferences</h2><p className="muted">Clear expectations make shared homes easier.</p><div className="preference-grid">{preferenceEntries}{preferences.lifestyleTraits?.map((trait) => <div className="preference-item" key={trait}><strong>Daily routine</strong><span>{formatPreferenceValue(trait)}</span></div>)}</div></section>}

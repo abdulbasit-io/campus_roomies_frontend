@@ -5,11 +5,13 @@ import { MapPin } from 'lucide-react';
 import type { Listing } from '@/lib/domain';
 import { formatNaira } from '@/lib/domain';
 import { SaveButton } from '@/components/save-button';
+import { ResilientImage } from '@/components/resilient-image';
 
 export function ListingCard({ listing, compact = false }: { listing: Listing; compact?: boolean }) {
   return (
     <article className={`listing-card ${compact ? 'listing-card-compact' : ''}`}>
-      <Link className="listing-image" href={`/listings/${listing.id}`} style={{ backgroundImage: `url("${listing.image}")` }}>
+      <Link className="listing-image" href={`/listings/${listing.id}`}>
+        <ResilientImage src={listing.image} alt={listing.title} className="listing-card-image" sizes="(max-width: 540px) 100vw, (max-width: 850px) 50vw, 33vw" />
         <span className="image-label">{listing.availability}</span>
         <span onClick={(event) => event.preventDefault()}><SaveButton listingId={listing.id} compact /></span>
       </Link>

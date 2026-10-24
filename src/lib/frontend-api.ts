@@ -179,16 +179,36 @@ function readable(value: string | null | undefined): string {
   return value.toLowerCase().split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
 }
 
+export function formatAvailabilityDate(value: string | null): string | null {
+  if (!value) return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/.exec(value.trim());
+  if (!match) return null;
+  const [, year, month, day] = match;
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  if (date.getUTCFullYear() !== Number(year)
+    || date.getUTCMonth() !== Number(month) - 1
+    || date.getUTCDate() !== Number(day)) {
+    return null;
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  }).format(date);
+}
+
 function formatAvailabilityValue(listing: ApiListing): string {
-  if (listing.availabilityType === 'SPECIFIC_DATE' && listing.availabilityDate) {
-    return new Date(`${listing.availabilityDate}T00:00:00`).toLocaleDateString();
+  if (listing.availabilityType === 'SPECIFIC_DATE') {
+    return formatAvailabilityDate(listing.availabilityDate) ?? 'Specific date';
   }
   return readable(listing.availabilityType);
 }
 
 function seekerAvailability(listing: ApiListing): string {
-  if (listing.availabilityType === 'SPECIFIC_DATE' && listing.availabilityDate) {
-    return `Looking from ${new Date(`${listing.availabilityDate}T00:00:00`).toLocaleDateString()}`;
+  if (listing.availabilityType === 'SPECIFIC_DATE') {
+    const date = formatAvailabilityDate(listing.availabilityDate);
+    return date ? `Looking from ${date}` : 'Looking from a specific date';
   }
   return listing.availabilityType === 'NEXT_SESSION'
     ? 'By next session'
@@ -332,34 +352,41 @@ export async function uploadDraftImages(
   listingId: string,
   files: File[],
   firstPosition: number,
+  onProgress?: (completed: number, total: number) => void,
 ): Promise<ImageBatchResult> {
   const authorization = await apiMutation<UploadAuthorization>('/media/upload-authorizations', 'POST');
+  let completed = 0;
   const results = await Promise.allSettled(files.map(async (file, index) => {
-    if (file.size > authorization.maxFileSizeBytes) {
-      throw new Error(`${file.name}: image must be no larger than ${Math.floor(authorization.maxFileSizeBytes / (1024 * 1024))} MB.`);
+    try {
+      if (file.size > authorization.maxFileSizeBytes) {
+        throw new Error(`${file.name}: image must be no larger than ${Math.floor(authorization.maxFileSizeBytes / (1024 * 1024))} MB.`);
+      }
+      const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+      if (!authorization.allowedFormats.includes(extension)) {
+        throw new Error(`${file.name}: choose a JPG, PNG, or WebP image.`);
+      }
+      const form = new FormData();
+      form.set('file', file);
+      form.set('api_key', authorization.apiKey);
+      form.set('timestamp', String(authorization.timestamp));
+      form.set('signature', authorization.signature);
+      form.set('folder', authorization.folder);
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${encodeURIComponent(authorization.cloudName)}/image/upload`,
+        { method: 'POST', body: form },
+      );
+      const result = await response.json() as { public_id?: string; error?: { message?: string } };
+      if (!response.ok || !result.public_id) {
+        throw new Error(`${file.name}: ${result.error?.message ?? 'The image upload failed.'}`);
+      }
+      return await apiMutation<DraftImage>(`/media/listings/${listingId}/images`, 'POST', {
+        providerAssetId: result.public_id,
+        position: firstPosition + index,
+      });
+    } finally {
+      completed += 1;
+      onProgress?.(completed, files.length);
     }
-    const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
-    if (!authorization.allowedFormats.includes(extension)) {
-      throw new Error(`${file.name}: choose a JPG, PNG, or WebP image.`);
-    }
-    const form = new FormData();
-    form.set('file', file);
-    form.set('api_key', authorization.apiKey);
-    form.set('timestamp', String(authorization.timestamp));
-    form.set('signature', authorization.signature);
-    form.set('folder', authorization.folder);
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${encodeURIComponent(authorization.cloudName)}/image/upload`,
-      { method: 'POST', body: form },
-    );
-    const result = await response.json() as { public_id?: string; error?: { message?: string } };
-    if (!response.ok || !result.public_id) {
-      throw new Error(`${file.name}: ${result.error?.message ?? 'The image upload failed.'}`);
-    }
-    return apiMutation<DraftImage>(`/media/listings/${listingId}/images`, 'POST', {
-      providerAssetId: result.public_id,
-      position: firstPosition + index,
-    });
   }));
   return {
     uploaded: results.flatMap((result) => result.status === 'fulfilled' ? [result.value] : []),
@@ -439,4 +466,14 @@ export function submitReport(
   input: { reason: string; details?: string },
 ): Promise<{ id: string; listingId: string }> {
   return apiMutation(`/listings/${id}/reports`, 'POST', input);
+}
+
+export type FeedbackCategory = 'IDEA' | 'BUG' | 'USABILITY' | 'OTHER';
+
+export function submitFeedback(input: {
+  category: FeedbackCategory;
+  message: string;
+  contactEmail?: string;
+}): Promise<{ id: string; status: 'NEW'; notificationStatus: 'QUEUED' }> {
+  return apiMutation('/feedback', 'POST', input);
 }

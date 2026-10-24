@@ -83,6 +83,16 @@ export type ModeratedListingResult = {
   status: 'ACTIVE' | 'RESTRICTED' | 'FOUND';
 };
 
+export type AdminFeedback = {
+  id: string;
+  category: 'IDEA' | 'BUG' | 'USABILITY' | 'OTHER';
+  message: string;
+  contactEmail: string | null;
+  status: 'NEW' | 'REVIEWED';
+  createdAt: string;
+  reviewedAt: string | null;
+};
+
 export const adminApi = {
   dashboard: () => apiRequest<AdminDashboard>('/admin/dashboard'),
   reports: (page: number, pageSize = 20) => apiRequest<PaginatedResult<ModerationReport>>(
@@ -90,6 +100,18 @@ export const adminApi = {
   ),
   moderationAudit: (page: number, pageSize = 20) => apiRequest<PaginatedResult<ModerationAuditAction>>(
     `/moderation/audit?page=${page}&pageSize=${pageSize}`,
+  ),
+  feedback: (page: number, status: 'NEW' | 'REVIEWED' | 'ALL' = 'NEW', pageSize = 20) => {
+    const query = new URLSearchParams({
+      page: String(page),
+      pageSize: String(pageSize),
+      status,
+    });
+    return apiRequest<PaginatedResult<AdminFeedback>>(`/admin/feedback?${query.toString()}`);
+  },
+  markFeedbackReviewed: (feedbackId: string) => apiMutation<Pick<AdminFeedback, 'id' | 'status' | 'reviewedAt'>>(
+    `/admin/feedback/${feedbackId}/review`,
+    'PATCH',
   ),
   report: (reportId: string) => apiRequest<ModerationReport>(`/moderation/reports/${reportId}`),
   restrictListing: (listingId: string, reason: string) => apiMutation<ModeratedListingResult>(

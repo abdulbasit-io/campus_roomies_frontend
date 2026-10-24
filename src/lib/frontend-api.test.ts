@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toCardListing, type ApiListing } from './frontend-api';
+import { formatAvailabilityDate, toCardListing, type ApiListing } from './frontend-api';
 
 const listing: ApiListing = {
   id: 'listing-1',
@@ -70,5 +70,22 @@ describe('toCardListing', () => {
       accommodationType: 'OTHER',
       accommodationTypeOther: 'Studio apartment',
     }).roomType).toBe('Studio apartment');
+  });
+
+  it('formats a specific availability date for the listing eyebrow', () => {
+    const availableRoom = {
+      ...listing,
+      intent: 'ROOM_AVAILABLE' as const,
+      availabilityType: 'SPECIFIC_DATE' as const,
+      availabilityDate: '2026-10-24T00:00:00.000Z',
+    };
+    expect(toCardListing(availableRoom).availability).not.toContain('Invalid');
+    expect(toCardListing(availableRoom).availability).not.toBe('Specific date');
+    expect(toCardListing({ ...availableRoom, availabilityDate: 'not-a-date' }).availability)
+      .toBe('Specific date');
+  });
+
+  it('rejects impossible calendar dates instead of formatting Invalid Date', () => {
+    expect(formatAvailabilityDate('2026-02-30')).toBeNull();
   });
 });

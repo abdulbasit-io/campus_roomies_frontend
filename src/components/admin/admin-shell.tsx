@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Activity, Building2, ClipboardList, Flag, LayoutDashboard, LogOut, Mail, ShieldCheck } from 'lucide-react';
+import { Activity, Building2, ClipboardList, Flag, LayoutDashboard, LogOut, Mail, MessageSquare, ShieldCheck } from 'lucide-react';
 import { Logo } from '@/components/site-chrome';
 import { ApiRequestError, apiMutation, apiRequest } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -78,6 +78,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <Link href="/admin" aria-current={pathname === '/admin' ? 'page' : undefined} aria-label="Overview"><LayoutDashboard size={17} /><span>Overview</span></Link>
           <Link href="/admin/moderation" aria-current={pathname === '/admin/moderation' || pathname.startsWith('/admin/moderation/reports') ? 'page' : undefined} aria-label="Moderation"><Flag size={17} /><span>Moderation</span></Link>
           <Link href="/admin/moderation/audit" aria-current={pathname === '/admin/moderation/audit' ? 'page' : undefined} aria-label="Moderation audit"><ClipboardList size={17} /><span>Moderation audit</span></Link>
+          <Link href="/admin/feedback" aria-current={pathname.startsWith('/admin/feedback') ? 'page' : undefined} aria-label="Feedback inbox"><MessageSquare size={17} /><span>Feedback inbox</span></Link>
           <Link href="/admin/communications" aria-current={pathname.startsWith('/admin/communications') ? 'page' : undefined} aria-label="Communications"><Mail size={17} /><span>Communications</span></Link>
           <Link href="/admin/institutions" aria-current={pathname.startsWith('/admin/institutions') ? 'page' : undefined} aria-label="Institutions"><Building2 size={17} /><span>Institutions</span></Link>
           <Link href="/admin/audit" aria-current={pathname.startsWith('/admin/audit') ? 'page' : undefined} aria-label="Audit history"><Activity size={17} /><span>Audit history</span></Link>

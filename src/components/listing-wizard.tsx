@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { useState } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components/site-chrome';
@@ -23,8 +24,35 @@ const preferenceGroups: Array<[string, string[]]> = [
   ['Smoking rule', ['Non-smoking', 'No indoor smoking']],
   ['Utility preference', ['Shared utility costs', 'Utilities included', 'Flexible']],
 ];
+const maxPhotos = 4;
 const imageLimitBytes = 5 * 1024 * 1024;
 const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+function PendingPhotoPreview({
+  file,
+  disabled,
+  onRemove,
+}: {
+  file: File;
+  disabled: boolean;
+  onRemove: () => void;
+}) {
+  const [previewUrl, setPreviewUrl] = useState('');
+
+  useEffect(() => {
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  return <div className="pending-photo-item">
+    <div className="pending-photo-preview">
+      {previewUrl && <Image src={previewUrl} alt="" fill unoptimized sizes="48px" />}
+    </div>
+    <span title={file.name}>{file.name}</span>
+    <button type="button" onClick={onRemove} disabled={disabled} aria-label={`Remove ${file.name}`}>Remove</button>
+  </div>;
+}
 
 export function ListingWizard() {
   const searchParams = useSearchParams();
@@ -50,6 +78,7 @@ export function ListingWizard() {
   const [error, setError] = useState('');
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [pending, setPending] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ completed: number; total: number } | null>(null);
   const [published, setPublished] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
 
@@ -148,8 +177,12 @@ export function ListingWizard() {
         .filter(([label]) => !selected[label])
         .map(([label]) => label);
     }
-    if (stepToValidate === 2 && photos.length + pendingPhotos.length < 3) {
-      return ['At least 3 photos'];
+    if (stepToValidate === 2) {
+      const photoCount = photos.length + pendingPhotos.length;
+      return [
+        ...(photoCount < 3 ? ['At least 3 photos'] : []),
+        ...(photoCount > maxPhotos ? [`No more than ${maxPhotos} photos`] : []),
+      ];
     }
     return [];
   }
@@ -226,8 +259,8 @@ export function ListingWizard() {
         accepted.push(file);
       }
     });
-    if (photos.length + pendingPhotos.length + accepted.length > 5) {
-      setError('A listing can have no more than five photos. Remove a selected photo before adding another.');
+    if (photos.length + pendingPhotos.length + accepted.length > maxPhotos) {
+      setError(`A listing can have no more than ${maxPhotos} photos. Remove a selected photo before adding another.`);
       return;
     }
     setPendingPhotos((current) => [...current, ...accepted]);
@@ -249,10 +282,13 @@ export function ListingWizard() {
         return;
       }
       setPending(true);
+      setUploadProgress({ completed: 0, total: pendingPhotos.length });
       try {
         const id = await persistDraft();
         const firstPosition = Math.max(0, ...photos.map((photo) => photo.position)) + 1;
-        const result = await uploadDraftImages(id, pendingPhotos, firstPosition);
+        const result = await uploadDraftImages(id, pendingPhotos, firstPosition, (completed, total) => {
+          setUploadProgress({ completed, total });
+        });
         setPhotos((current) => [...current, ...result.uploaded].sort((a, b) => a.position - b.position));
         setPendingPhotos((current) => result.failures.map(({ index }) => current[index]));
         if (result.failures.length) {
@@ -264,6 +300,7 @@ export function ListingWizard() {
         return;
       } finally {
         setPending(false);
+        setUploadProgress(null);
       }
     }
     setMissingFields([]);
@@ -294,7 +331,7 @@ export function ListingWizard() {
   return <><Header /><main className="wizard-page shell"><div className="wizard-top"><Link className="back-link" href="/">← Back home</Link><div className="progress-steps">{steps.map((item, index) => <button className={index === step ? 'current' : index < step ? 'complete' : ''} key={item} onClick={() => index <= step && setStep(index)}><span>{index + 1}</span>{item}</button>)}</div></div><div className="wizard-layout"><div className="wizard-main">
     {step === 0 && <><p className="eyebrow">Step 1 of 4 · Listing details</p><h1>Tell us about the room.</h1><p className="wizard-lede">The small details help someone decide whether this could be the right fit for their everyday.</p><div className="form-card"><label>Listing title <small>{title.length}/60</small><input maxLength={60} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Self-contained near Camp" /></label><label>Institution<select value={institutionId} onChange={(event) => { setInstitutionId(event.target.value); setAreaId(''); }}><option value="">Choose an institution</option>{institutions.map((institution) => <option key={institution.id} value={institution.id}>{institution.name}</option>)}</select></label><label>Area<select value={areaId} onChange={(event) => setAreaId(event.target.value)} disabled={!institutionId}><option value="">Choose an area</option>{areas.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}</select></label><label>Nearby landmark<input maxLength={160} value={landmark} onChange={(event) => setLandmark(event.target.value)} placeholder="Optional landmark or directions" /></label><fieldset><legend>Room type</legend><div className="choice-grid">{roomTypes.map(([value, label]) => <button className={roomType === value ? 'choice selected' : 'choice'} key={value} onClick={() => setRoomType(value)} type="button"><strong>{label}</strong><span>{value === 'SELF_CONTAINED' ? 'Private bath & kitchen' : value === 'OTHER' ? 'Describe another accommodation type' : 'A practical shared arrangement'}</span></button>)}</div></fieldset>{roomType === 'OTHER' && <label>Describe the room type<input maxLength={120} value={roomTypeOther} onChange={(event) => setRoomTypeOther(event.target.value)} placeholder="e.g. Studio apartment" /></label>}<div className="split-fields"><label>Price amount<input value={priceAmount} onChange={(event) => setPriceAmount(event.target.value.replace(/\\D/g, ''))} inputMode="numeric" placeholder="e.g. 250000" /></label><label>Pricing period<select value={pricePeriod} onChange={(event) => setPricePeriod(event.target.value as 'YEAR' | 'SESSION')}><option value="YEAR">Per year</option><option value="SESSION">Per session</option></select></label></div><label>Availability<select value={availabilityType} onChange={(event) => setAvailabilityType(event.target.value as typeof availabilityType)}><option value="AVAILABLE_NOW">Available now</option><option value="NEXT_SESSION">Next session</option><option value="SPECIFIC_DATE">Specific date</option></select></label>{availabilityType === 'SPECIFIC_DATE' && <label>Available from<input type="date" value={availabilityDate} onChange={(event) => setAvailabilityDate(event.target.value)} /></label>}<label>Description <small>{description.length}/500</small><textarea maxLength={500} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="What should someone know before they come to see it?" /></label></div></>}
     {step === 1 && <><p className="eyebrow">Step 2 of 4 · Living preferences</p><h1>Who would make a good fit?</h1><p className="wizard-lede">There is no perfect roommate. There is a better fit for the way you actually live.</p><div className="form-card">{preferenceGroups.map(([label, options]) => <fieldset key={label}><legend>{label}</legend><div className="chip-options">{options.map((option) => <button className={selected[label] === option ? 'chip selected' : 'chip'} key={option} onClick={() => setSelected((current) => ({ ...current, [label]: option }))} type="button">{option}{selected[label] === option && ' ✓'}</button>)}</div></fieldset>)}<label>Anything else someone should know? <small>Optional</small><textarea maxLength={500} placeholder="Quiet after 10pm? Cooking often? Tell them what makes the home work." /></label></div></>}
-    {step === 2 && <><p className="eyebrow">Step 3 of 4 · Photos</p><h1>Show people the space.</h1><p className="wizard-lede">Add at least 3 and up to 5 honest photos. They will upload together when you continue to review.</p><div className="form-card photo-uploader"><label className="upload-box"><span>＋</span><strong>Add photos</strong><small>JPEG, PNG, or WebP · up to 5 MB each</small><input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={pending || photos.length + pendingPhotos.length >= 5} onChange={selectPhotos} /></label><div className="photo-count">{photos.length + pendingPhotos.length} of 5 photos selected</div><div className="photo-grid">{photos.map((photo, index) => <div className="uploaded-photo" key={photo.id} style={{ backgroundImage: `url("${photo.url}")` }}><span>{index === 0 ? 'Cover photo' : `Photo ${index + 1}`}</span><button className="photo-remove" type="button" disabled={pending} onClick={() => removePhoto(photo)} aria-label={`Remove uploaded photo ${index + 1}`}>×</button></div>)}</div>{pendingPhotos.length > 0 && <div className="pending-photo-list"><strong>Ready to upload</strong>{pendingPhotos.map((file, index) => <div key={`${file.name}-${file.lastModified}-${index}`}><span>{file.name}</span><button type="button" onClick={() => removePendingPhoto(index)} disabled={pending} aria-label={`Remove ${file.name}`}>Remove</button></div>)}</div>}</div></>}
+    {step === 2 && <><p className="eyebrow">Step 3 of 4 · Photos</p><h1>Show people the space.</h1><p className="wizard-lede">Add at least 3 and up to 4 honest photos. They will upload together when you continue to review.</p><div className="form-card photo-uploader"><label className="upload-box"><span>＋</span><strong>Add photos</strong><small>JPEG, PNG, or WebP · up to 5 MB each</small><input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={pending || photos.length + pendingPhotos.length >= maxPhotos} onChange={selectPhotos} /></label><div className="photo-count">{photos.length + pendingPhotos.length} of {maxPhotos} photos selected</div>{uploadProgress && <div className="upload-progress" role="status" aria-live="polite"><div className="upload-progress-heading"><strong>Uploading your photos</strong><span>{uploadProgress.completed} of {uploadProgress.total} ready</span></div><progress {...(uploadProgress.completed ? { value: uploadProgress.completed } : {})} max={uploadProgress.total} aria-label={`${uploadProgress.completed} of ${uploadProgress.total} photos uploaded`} /><p>{uploadProgress.completed === 0 ? 'Connecting to the image service. Large photos may take a little longer on a slow connection.' : 'Please keep this page open while the remaining photos finish uploading.'}</p></div>}<div className="photo-grid">{photos.map((photo, index) => <div className="uploaded-photo" key={photo.id} style={{ backgroundImage: `url("${photo.url}")` }}><span>{index === 0 ? 'Cover photo' : `Photo ${index + 1}`}</span><button className="photo-remove" type="button" disabled={pending} onClick={() => removePhoto(photo)} aria-label={`Remove uploaded photo ${index + 1}`}>×</button></div>)}</div>{pendingPhotos.length > 0 && <div className="pending-photo-list"><strong>{pending ? 'Selected photos' : 'Ready to upload'}</strong>{pendingPhotos.map((file, index) => <PendingPhotoPreview key={`${file.name}-${file.lastModified}-${index}`} file={file} disabled={pending} onRemove={() => removePendingPhoto(index)} />)}</div>}</div></>}
     {step === 3 && <><p className="eyebrow">Step 4 of 4 · Final check</p><h1>Review your listing.</h1><p className="wizard-lede">Read it once as someone who has never seen the place. Does it tell them enough to take the next step?</p><div className="review-card"><div className="review-photo" style={photos[0] ? { backgroundImage: `url("${photos[0].url}")` } : undefined} /><div className="review-copy"><span className="soft-badge">{roomTypes.find(([value]) => value === roomType)?.[1] === 'Other' ? roomTypeOther || 'Other' : roomTypes.find(([value]) => value === roomType)?.[1] ?? roomType}</span><h2>{title || 'Your listing title'}</h2><p>{institutions.find((item) => item.id === institutionId)?.name ?? 'Institution'} · {areas.find((item) => item.id === areaId)?.name ?? 'Area'}{landmark ? ` · ${landmark}` : ''}</p><strong>{priceAmount ? `₦${Number(priceAmount).toLocaleString('en-NG')}` : 'Price not set'} <small>/ {pricePeriod.toLowerCase()}</small></strong><div className="tag-row">{Object.values(selected).map((value) => <span className="tag" key={value}>{value}</span>)}</div></div></div><div className="review-note">Your contact details stay private. Eligible students will reach you through the WhatsApp handoff.</div></>}
     {missingFields.length > 0 && <div className="wizard-validation" role="alert"><strong>Complete these required items to continue:</strong><ul>{missingFields.map((field) => <li key={field}>{field}</li>)}</ul></div>}
     {error && <p className="form-error" role="alert">{error}</p>}

@@ -68,6 +68,8 @@ Organize routes and components around product domains, not screenshot filenames.
 - Seeker profile/listing flow.
 - Interest list.
 - Report flow.
+- General product feedback flow for guests and signed-in users, separate from
+  safety reporting, with an administrator feedback inbox.
 - Admin catalog-management experience, as a backend recommendation below.
 - Admin moderation report queue and report-review workflow.
 
@@ -187,7 +189,9 @@ Keep domain forms and view models typed against the shared API contract. Avoid d
   - Availability.
   - Description.
 - Preference step with one required selection in every approved group.
-- Photo upload with minimum 3 and maximum 5 photos.
+- Photo upload with minimum 3 and maximum 4 photos, matching the four-image
+  listing gallery. Listing photos retry briefly on load failures, and the
+  details gallery opens images in a full-size viewer.
 - Draft autosave/resume.
 - Review screen showing actual entered data.
 - Publish success only after backend confirmation.

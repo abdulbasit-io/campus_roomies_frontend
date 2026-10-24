@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bookmark, ChevronDown, CircleUserRound, FileText, Home, LogOut, Plus, UserRound } from 'lucide-react';
+import { Bookmark, ChevronDown, CircleUserRound, FileText, Home, LogOut, MessageSquare, Plus, UserRound } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { logout } from '@/lib/frontend-api';
@@ -67,6 +67,7 @@ export function Header() {
           <button className="account-trigger" aria-expanded={menuOpen} aria-haspopup="menu" onClick={() => setMenuOpen((open) => !open)}><span className="avatar-button" style={profile?.photoUrl ? { backgroundImage: `url("${profile.photoUrl}")` } : undefined}>{!profile?.photoUrl && <CircleUserRound size={18} />}</span><ChevronDown size={14} className="desktop-only" /></button>
           {menuOpen && <div ref={menuRef} className="account-menu" role="menu">
             <div className="account-menu-heading"><span className="avatar-button" style={profile?.photoUrl ? { backgroundImage: `url("${profile.photoUrl}")` } : undefined}>{!profile?.photoUrl && (profile?.firstName.slice(0, 1) ?? 'A')}</span><div><strong>{profile ? `${profile.firstName} ${profile.lastNameInitial}.` : 'Your account'}</strong><small>{profile ? 'Student profile' : 'Sign in to manage your account'}</small></div></div>
+            <Link role="menuitem" href="/feedback" onClick={() => setMenuOpen(false)}><MessageSquare size={16} /> Share feedback</Link>
             {profile ? <>
               <Link role="menuitem" href="/profile" onClick={() => setMenuOpen(false)}><UserRound size={16} /> Profile</Link>
               <Link role="menuitem" href="/listings/new" onClick={() => setMenuOpen(false)}><Plus size={16} /> Create a listing</Link>
@@ -92,7 +93,7 @@ export function Footer() {
         </div>
         <div><h3>Explore</h3><Link href="/browse">Browse rooms</Link><Link href="/how-it-works">How it works</Link></div>
         <div><h3>Host</h3><Link href="/listings/new">List a room</Link><Link href="/profile">My profile</Link></div>
-        <div><h3>Trust &amp; care</h3><Link href="/report">Safety guidelines</Link><Link href="/privacy">Privacy</Link></div>
+        <div><h3>Trust &amp; care</h3><Link href="/feedback">Share feedback</Link><Link href="/report">Safety guidelines</Link><Link href="/privacy">Privacy</Link></div>
       </div>
       <div className="shell footer-bottom"><span>© 2026 Campus Roomies</span><span>Built for student life.</span></div>
     </footer>
