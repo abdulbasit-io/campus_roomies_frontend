@@ -29,8 +29,8 @@ export default function ForgotPasswordPage() {
   }
 
   return <><Header /><main className="auth-page shell"><section className="auth-card">
-    <p className="eyebrow">Password help</p><h1>{sent ? 'Check your inbox.' : 'Reset your password.'}</h1>
-    {sent ? <><p className="auth-copy">If an account exists for that email, a reset link will be sent.</p><Link className="button full-width" href="/login">Back to log in</Link></> : <form onSubmit={submit}>
+    <h1>{sent ? 'Check your inbox.' : 'Reset your password.'}</h1>
+    {sent ? <><p className="auth-copy">If an account exists for that email, a reset link will be sent.</p><br/><Link className="button full-width" href="/login">Back to log in</Link></> : <form onSubmit={submit}>
       <p className="auth-copy">Enter the email address for your account. We’ll send a reset link if it exists.</p>
       <label>Email address<input type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
       {error && <p className="form-error" role="alert">{error}</p>}

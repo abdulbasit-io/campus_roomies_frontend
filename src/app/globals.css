@@ -298,6 +298,12 @@ button { cursor:pointer; }
 .analytics-heading { align-items:flex-end; }
 .analytics-heading .arrow-link { display:inline-flex; align-items:center; gap:6px; margin-bottom:18px; }
 .analytics-heading .admin-filter { min-width:170px; }
+.analytics-controls { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:10px; }
+.analytics-last-updated { color:var(--muted); font-size:11px; white-space:nowrap; }
+.analytics-refresh-button { min-height:40px; padding:9px 12px; font-size:12px; }
+.analytics-refresh-button:disabled { cursor:wait; opacity:.7; transform:none; box-shadow:none; }
+.analytics-refresh-spinning { animation:analytics-refresh-spin 1s linear infinite; }
+@keyframes analytics-refresh-spin { to { transform:rotate(360deg); } }
 .analytics-heading select { min-width:160px; }
 .analytics-stat-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
 .analytics-actions h2,.analytics-breakdown h2 { margin:0; font-size:17px; letter-spacing:-.03em; }
@@ -330,6 +336,9 @@ button { cursor:pointer; }
   .admin-heading-actions > .button { width:100%; }
   .analytics-stat-grid,.analytics-breakdown-grid { grid-template-columns:1fr; }
   .analytics-heading .admin-filter { width:100%; }
+  .analytics-controls { width:100%; justify-content:flex-start; }
+  .analytics-controls .admin-filter { flex:1 1 100%; }
+  .analytics-controls .admin-filter select { width:100%; }
   .analytics-funnel > ol > li { grid-template-columns:30px minmax(0,1fr) auto; gap:8px; padding:10px; }
   .analytics-funnel li small { grid-column:2/-1; text-align:left; }
   }

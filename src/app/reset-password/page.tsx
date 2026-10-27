@@ -42,7 +42,7 @@ function ResetPasswordForm() {
   }
 
   return <><Header /><main className="auth-page shell"><section className="auth-card">
-    <p className="eyebrow">Password help</p><h1>{done ? 'Password updated.' : 'Choose a new password.'}</h1>
+    <h1>{done ? 'Password updated.' : 'Choose a new password.'}</h1>
     {done ? <><p className="auth-copy">Your active sessions have been signed out. Log in with your new password.</p><Link className="button full-width" href="/login">Log in</Link></> : !token ? <><p className="auth-copy">This reset link is missing its token. Request a new link to continue.</p><Link className="button full-width" href="/forgot-password">Request reset link</Link></> : <form onSubmit={submit}>
       <label>New password<input required minLength={8} type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
       <label>Confirm password<input required minLength={8} type="password" autoComplete="new-password" value={confirmed} onChange={(event) => setConfirmed(event.target.value)} /></label>

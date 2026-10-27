@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, BarChart3 } from 'lucide-react';
+import { ArrowLeft, BarChart3, RefreshCw } from 'lucide-react';
 import { AdminAnalytics, AnalyticsBreakdown, adminApi } from '@/lib/admin-api';
 
 const ranges = [7, 30, 90] as const;
@@ -47,18 +47,48 @@ export default function AdminAnalyticsPage() {
   const [days, setDays] = useState<(typeof ranges)[number]>(30);
   const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
   const [error, setError] = useState('');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [refreshing, setRefreshing] = useState(true);
+  const [refreshRequest, setRefreshRequest] = useState(0);
 
   useEffect(() => {
     let active = true;
-    setAnalytics(null);
-    setError('');
-    adminApi.analytics(days)
-      .then((result) => { if (active) setAnalytics(result); })
-      .catch((cause: unknown) => {
-        if (active) setError(cause instanceof Error ? cause.message : 'Unable to load analytics.');
-      });
-    return () => { active = false; };
-  }, [days]);
+    let requestInFlight = false;
+    const refresh = async () => {
+      if (!active || document.visibilityState === 'hidden' || requestInFlight) return;
+      requestInFlight = true;
+      setRefreshing(true);
+      setError('');
+      try {
+        const result = await adminApi.analytics(days);
+        if (active) {
+          setAnalytics(result);
+          setLastUpdated(new Date());
+        }
+      } catch (cause: unknown) {
+        if (active) setError(cause instanceof Error ? cause.message : 'Unable to refresh analytics.');
+      } finally {
+        requestInFlight = false;
+        if (active) setRefreshing(false);
+      }
+    };
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') void refresh();
+    };
+
+    void refresh();
+    const interval = window.setInterval(() => { void refresh(); }, 60_000);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, [days, refreshRequest]);
+
+  function formatLastUpdated(value: Date): string {
+    return value.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
 
   return (
     <div className="admin-page">
@@ -69,14 +99,29 @@ export default function AdminAnalyticsPage() {
           <h1>Understand how students connect</h1>
           <p className="admin-muted">First-party, privacy-limited activity. Counts are not cross-site or WhatsApp conversation tracking.</p>
         </div>
-        <label className="admin-filter">Reporting period
-          <select value={days} onChange={(event) => setDays(Number(event.target.value) as (typeof ranges)[number])}>
-            {ranges.map((range) => <option key={range} value={range}>Last {range} days</option>)}
-          </select>
-        </label>
+        <div className="analytics-controls">
+          <span className="analytics-last-updated" aria-live="polite">
+            {lastUpdated ? `Last updated ${formatLastUpdated(lastUpdated)}` : 'Waiting for first update'}
+          </span>
+          <button
+            type="button"
+            className="button button-secondary analytics-refresh-button"
+            onClick={() => setRefreshRequest((current) => current + 1)}
+            disabled={refreshing}
+            aria-label="Refresh analytics now"
+          >
+            <RefreshCw size={15} className={refreshing ? 'analytics-refresh-spinning' : undefined} />
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
+          <label className="admin-filter">Reporting period
+            <select value={days} onChange={(event) => setDays(Number(event.target.value) as (typeof ranges)[number])}>
+              {ranges.map((range) => <option key={range} value={range}>Last {range} days</option>)}
+            </select>
+          </label>
+        </div>
       </div>
 
-      {error && <p className="admin-alert" role="alert">{error}</p>}
+      {error && <p className="admin-alert" role="alert">{analytics ? `Refresh failed. Showing the last successful update. ${error}` : error}</p>}
       {!analytics && !error && <p className="admin-muted" role="status">Loading product analytics…</p>}
       {analytics && <>
         <section className="admin-stat-grid analytics-stat-grid" aria-label="Key platform metrics">
