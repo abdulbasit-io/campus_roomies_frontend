@@ -48,10 +48,8 @@ export default function FeedbackPage() {
       <p>Your feedback is saved for the Campus Roomies team, and an email notification has been queued.</p>
       <div className="feedback-success-actions"><Link className="button" href="/browse">Explore rooms</Link><button className="button button-secondary" onClick={() => { setSubmitted(false); setMessage(''); setContactEmail(''); }}>Send more feedback</button></div>
     </section> : <section className="feedback-panel">
-      <p className="eyebrow">Help us improve</p>
       <h1>What could work better?</h1>
       <p className="feedback-intro">Share a suggestion, tell us what was confusing, or let us know when something is not working. You can send feedback without signing in.</p>
-      <p className="feedback-report-note">For an urgent safety concern or a specific listing, use the <Link href="/report">reporting flow</Link> instead.</p>
       <form className="feedback-form" onSubmit={sendFeedback}>
         <label>What is this about?
           <select value={category} onChange={(event) => setCategory(event.target.value as FeedbackCategory)}>
