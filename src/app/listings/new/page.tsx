@@ -12,7 +12,7 @@ export default async function NewListingPage({ searchParams }: { searchParams: P
         <p className="intent-entry-lede">Everyone here is looking for a roommate. Choose the path that describes your situation today.</p>
         <div className="intent-entry-grid">
           <Link className="intent-entry-card" href="/listings/new/room-available"><span className="intent-icon">⌂</span><h2>I have a room</h2><p>List the room and tell people what kind of roommate would fit your home.</p><strong>List a room →</strong></Link>
-          <Link className="intent-entry-card intent-entry-card-orange" href="/listings/new/room-needed"><span className="intent-icon">＋</span><h2>I need a room</h2><p>Share your budget, areas, and living preferences so people with rooms can find you.</p><strong>Create a room-needed listing →</strong></Link>
+          <Link className="intent-entry-card intent-entry-card-orange" href="/listings/new/room-needed"><span className="intent-icon">＋</span><h2>I need a room</h2><p>Share your budget, areas, and living preferences so people with rooms can find you.</p><strong>Find a room →</strong></Link>
         </div>
       </main>
       <Footer />
