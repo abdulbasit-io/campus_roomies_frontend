@@ -4,6 +4,8 @@ import './globals.css';
 import { SessionProvider } from '@/lib/session';
 import { AnalyticsTracker } from '@/components/analytics-tracker';
 
+const vercelAnalyticsEnabled = process.env.NEXT_PUBLIC_VERCEL_ANALYTICS_ENABLED === 'true';
+
 export const metadata: Metadata = {
   title: 'Campus Roomies',
   description: 'Housing around your campus, made easier.',
@@ -17,7 +19,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <AnalyticsTracker />
           {children}
         </SessionProvider>
-        <Analytics />
+        {vercelAnalyticsEnabled && <Analytics />}
       </body>
     </html>
   );

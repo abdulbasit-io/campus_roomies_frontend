@@ -19,6 +19,7 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [logoutError, setLogoutError] = useState('');
   const [currentPath, setCurrentPath] = useState<string | null>(null);
+  const [hasScrolled, setHasScrolled] = useState(false);
   const { profile, signOut } = useSession();
 
   useEffect(() => {
@@ -28,6 +29,13 @@ export function Header() {
     }
     setCurrentPath(`${pathname}${window.location.search}`);
   }, [pathname]);
+
+  useEffect(() => {
+    const handleScroll = () => setHasScrolled(window.scrollY > 12);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -53,7 +61,7 @@ export function Header() {
   }
 
   return (
-    <header className="site-header">
+    <header className={`site-header ${hasScrolled ? 'site-header-scrolled' : ''}`}>
       <div className="shell header-inner">
         <Logo />
         <nav className="desktop-nav" aria-label="Primary navigation">
