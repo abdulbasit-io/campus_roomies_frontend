@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Bookmark, ChevronDown, CircleUserRound, FileText, Home, LogOut, MessageSquare, Plus, UserRound } from 'lucide-react';
+import { Bookmark, ChevronDown, CircleUserRound, FileText, LogOut, MessageSquare, Plus, UserRound } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { logout } from '@/lib/frontend-api';
@@ -10,7 +11,11 @@ import { useSession } from '@/lib/session';
 import { authLink } from '@/lib/redirect';
 
 export function Logo() {
-  return <Link className="brand" href="/" aria-label="Campus Roomies home"><span className="brand-mark"><Home size={19} strokeWidth={2.4} /></span><strong>Campus <span>Roomies</span></strong></Link>;
+  return <Link className="brand" href="/" aria-label="Campus Roomies home">
+    <Image className="brand-logo brand-logo-full brand-logo-light" src="/brand/logo-brand.png" alt="Campus Roomies" width={333} height={64} priority />
+    <Image className="brand-logo brand-logo-full brand-logo-dark" src="/brand/logo-reversed.png" alt="Campus Roomies" width={333} height={64} priority />
+    <Image className="brand-logo brand-logo-mark" src="/brand/logo-mark.png" alt="" width={56} height={64} priority />
+  </Link>;
 }
 
 export function Header() {
