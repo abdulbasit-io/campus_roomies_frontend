@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Footer, Header } from '@/components/site-chrome';
 import {
@@ -17,6 +17,8 @@ import {
   updateDraft,
 } from '@/lib/frontend-api';
 import { useSession } from '@/lib/session';
+import { authLink } from '@/lib/redirect';
+import { clearLocalListingDraft, readLocalListingDraft, writeLocalListingDraft } from '@/lib/listing-local-draft';
 
 const steps = ['Your search', 'Preferences', 'About you', 'Review'];
 const preferenceGroups: Array<[string, string[]]> = [
@@ -61,6 +63,43 @@ export function SeekerWizard() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [missingFields, setMissingFields] = useState<string[]>([]);
+  const localDraftRestored = useRef(false);
+  const localDraftPersistenceStarted = useRef(false);
+
+  useEffect(() => {
+    const localDraft = readLocalListingDraft('ROOM_NEEDED');
+    if (localDraft) {
+      const values = localDraft.values;
+      setStep(localDraft.step);
+      setDraftId(localDraft.draftId);
+      setBudget(typeof values.budget === 'string' ? values.budget : '');
+      if (values.budgetPeriod === 'YEAR' || values.budgetPeriod === 'SESSION') setBudgetPeriod(values.budgetPeriod);
+      setInstitutionId(typeof values.institutionId === 'string' ? values.institutionId : '');
+      setAreaId(typeof values.areaId === 'string' ? values.areaId : '');
+      setAccommodationType(typeof values.accommodationType === 'string' ? values.accommodationType : '');
+      setAccommodationTypeOther(typeof values.accommodationTypeOther === 'string' ? values.accommodationTypeOther : '');
+      setTitle(typeof values.title === 'string' ? values.title : '');
+      setAvailabilityType(typeof values.availabilityType === 'string' ? values.availabilityType : '');
+      setAvailabilityDate(typeof values.availabilityDate === 'string' ? values.availabilityDate : '');
+      setSelected(values.selected && typeof values.selected === 'object' ? values.selected as Record<string, string> : {});
+      setAbout(typeof values.about === 'string' ? values.about : '');
+    }
+    localDraftRestored.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!localDraftRestored.current) return;
+    if (!localDraftPersistenceStarted.current) {
+      localDraftPersistenceStarted.current = true;
+      return;
+    }
+    writeLocalListingDraft({
+      intent: 'ROOM_NEEDED',
+      step,
+      draftId,
+      values: { budget, budgetPeriod, institutionId, areaId, accommodationType, accommodationTypeOther, title, availabilityType, availabilityDate, selected, about },
+    });
+  }, [step, draftId, budget, budgetPeriod, institutionId, areaId, accommodationType, accommodationTypeOther, title, availabilityType, availabilityDate, selected, about]);
 
   useEffect(() => {
     listInstitutions().then(setInstitutions).catch((cause: Error) => setError(cause.message));
@@ -76,6 +115,7 @@ export function SeekerWizard() {
 
   useEffect(() => {
     if (!ready || !profile) return;
+    if (localDraftRestored.current && readLocalListingDraft('ROOM_NEEDED')) return;
     getDraft().then((draft) => {
       const requestedId = searchParams.get('draft');
       if (!draft || draft.intent !== 'ROOM_NEEDED' || (requestedId && draft.id !== requestedId)) return;
@@ -174,7 +214,7 @@ export function SeekerWizard() {
 
   async function saveDraft() {
     if (!profile) {
-      window.location.assign(`/login?next=${encodeURIComponent('/listings/new/room-needed')}`);
+      window.location.assign(authLink('/login', '/listings/new/room-needed?resume=save'));
       return;
     }
     setPending(true);
@@ -191,7 +231,13 @@ export function SeekerWizard() {
 
   async function publishListing() {
     if (!profile) {
-      window.location.assign(`/login?next=${encodeURIComponent('/listings/new/room-needed')}`);
+      writeLocalListingDraft({
+        intent: 'ROOM_NEEDED',
+        step,
+        draftId,
+        values: { budget, budgetPeriod, institutionId, areaId, accommodationType, accommodationTypeOther, title, availabilityType, availabilityDate, selected, about },
+      });
+      window.location.assign(authLink('/login', '/listings/new/room-needed?resume=publish'));
       return;
     }
     setPending(true);
@@ -206,6 +252,7 @@ export function SeekerWizard() {
     try {
       const id = await persistDraft();
       await publishDraft(id);
+      clearLocalListingDraft('ROOM_NEEDED');
       setPublished(true);
       setSaved(true);
     } catch (cause) {

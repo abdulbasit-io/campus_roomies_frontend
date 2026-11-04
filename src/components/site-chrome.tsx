@@ -28,7 +28,7 @@ export function Header() {
   const { profile, signOut } = useSession();
 
   useEffect(() => {
-    if (pathname === '/login' || pathname === '/register') {
+    if (pathname === '/' || pathname === '/login' || pathname === '/register') {
       setCurrentPath(null);
       return;
     }

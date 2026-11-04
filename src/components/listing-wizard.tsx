@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components/site-chrome';
 import { useEffect } from 'react';
@@ -8,6 +8,8 @@ import { useSearchParams } from 'next/navigation';
 import { DraftImage, Institution, InstitutionArea, createDraft, getDraft, listAreas, listInstitutions, ListingDraftInput, publishDraft, removeDraftImage, updateDraft, uploadDraftImages } from '@/lib/frontend-api';
 import { useSession } from '@/lib/session';
 import { trackAnalyticsEvent } from '@/lib/analytics';
+import { authLink } from '@/lib/redirect';
+import { clearLocalListingDraft, readLocalListingDraft, writeLocalListingDraft } from '@/lib/listing-local-draft';
 
 const steps = ['Details', 'Preferences', 'Photos', 'Review'];
 const roomTypes = [
@@ -82,6 +84,44 @@ export function ListingWizard() {
   const [uploadProgress, setUploadProgress] = useState<{ completed: number; total: number } | null>(null);
   const [published, setPublished] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
+  const localDraftRestored = useRef(false);
+  const localDraftPersistenceStarted = useRef(false);
+
+  useEffect(() => {
+    const localDraft = readLocalListingDraft('ROOM_AVAILABLE');
+    if (localDraft) {
+      const values = localDraft.values;
+      setStep(localDraft.step);
+      setDraftId(localDraft.draftId);
+      setTitle(typeof values.title === 'string' ? values.title : '');
+      setRoomType(typeof values.roomType === 'string' ? values.roomType : 'SINGLE_ROOM_SHARED_FLAT');
+      setRoomTypeOther(typeof values.roomTypeOther === 'string' ? values.roomTypeOther : '');
+      setSelected(values.selected && typeof values.selected === 'object' ? values.selected as Record<string, string> : {});
+      setInstitutionId(typeof values.institutionId === 'string' ? values.institutionId : '');
+      setAreaId(typeof values.areaId === 'string' ? values.areaId : '');
+      setLandmark(typeof values.landmark === 'string' ? values.landmark : '');
+      setPriceAmount(typeof values.priceAmount === 'string' ? values.priceAmount : '');
+      if (values.pricePeriod === 'YEAR' || values.pricePeriod === 'SESSION') setPricePeriod(values.pricePeriod);
+      if (values.availabilityType === 'AVAILABLE_NOW' || values.availabilityType === 'NEXT_SESSION' || values.availabilityType === 'SPECIFIC_DATE') setAvailabilityType(values.availabilityType);
+      setAvailabilityDate(typeof values.availabilityDate === 'string' ? values.availabilityDate : '');
+      setDescription(typeof values.description === 'string' ? values.description : '');
+    }
+    localDraftRestored.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!localDraftRestored.current) return;
+    if (!localDraftPersistenceStarted.current) {
+      localDraftPersistenceStarted.current = true;
+      return;
+    }
+    writeLocalListingDraft({
+      intent: 'ROOM_AVAILABLE',
+      step,
+      draftId,
+      values: { title, roomType, roomTypeOther, selected, institutionId, areaId, landmark, priceAmount, pricePeriod, availabilityType, availabilityDate, description },
+    });
+  }, [step, draftId, title, roomType, roomTypeOther, selected, institutionId, areaId, landmark, priceAmount, pricePeriod, availabilityType, availabilityDate, description]);
 
   useEffect(() => {
     listInstitutions().then(setInstitutions).catch((cause: Error) => setError(cause.message));
@@ -94,6 +134,7 @@ export function ListingWizard() {
   useEffect(() => {
     if (!ready) return;
     if (!profile) return;
+    if (localDraftRestored.current && readLocalListingDraft('ROOM_AVAILABLE')) return;
     getDraft().then((draft) => {
       if (!draft || draft.intent !== 'ROOM_AVAILABLE' || (searchParams.get('draft') && draft.id !== searchParams.get('draft'))) return;
       setDraftId(draft.id);
@@ -198,7 +239,7 @@ export function ListingWizard() {
 
   async function saveDraft() {
     if (!profile) {
-      window.location.assign(`/login?next=${encodeURIComponent('/listings/new/room-available')}`);
+      window.location.assign(authLink('/login', '/listings/new/room-available?resume=save'));
       return;
     }
     setPending(true);
@@ -215,7 +256,13 @@ export function ListingWizard() {
 
   async function publishListing() {
     if (!profile) {
-      window.location.assign(`/login?next=${encodeURIComponent('/listings/new/room-available')}`);
+      writeLocalListingDraft({
+        intent: 'ROOM_AVAILABLE',
+        step,
+        draftId,
+        values: { title, roomType, roomTypeOther, selected, institutionId, areaId, landmark, priceAmount, pricePeriod, availabilityType, availabilityDate, description },
+      });
+      window.location.assign(authLink('/login', '/listings/new/room-available?resume=publish'));
       return;
     }
     setPending(true);
@@ -235,6 +282,7 @@ export function ListingWizard() {
     try {
       const id = await persistDraft();
       await publishDraft(id);
+      clearLocalListingDraft('ROOM_AVAILABLE');
       void trackAnalyticsEvent('LISTING_PUBLISHED', {
         listingId: id,
         intent: 'ROOM_AVAILABLE',
@@ -284,7 +332,13 @@ export function ListingWizard() {
 
     if (step === 2 && pendingPhotos.length) {
       if (!profile) {
-        window.location.assign(`/login?next=${encodeURIComponent('/listings/new/room-available')}`);
+        writeLocalListingDraft({
+          intent: 'ROOM_AVAILABLE',
+          step,
+          draftId,
+          values: { title, roomType, roomTypeOther, selected, institutionId, areaId, landmark, priceAmount, pricePeriod, availabilityType, availabilityDate, description },
+        });
+        window.location.assign(authLink('/login', '/listings/new/room-available?resume=photos'));
         return;
       }
       setPending(true);
