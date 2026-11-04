@@ -263,7 +263,7 @@ export function SeekerWizard() {
   }
 
   if (ready && profile && !profile.photoUrl) {
-    return <><Header /><main className="wizard-page shell"><div className="profile-photo-required"><h1>Add a profile picture to create a listing.</h1><p>Your profile picture will be used as the poster image for your room-needed listing.</p><Link className="button" href={`/profile/complete?next=${encodeURIComponent('/listings/new/room-needed')}`}>Add profile picture</Link></div></main><Footer /></>;
+    return <><Header /><main className="wizard-page shell"><div className="profile-photo-required"><h1>Add a profile picture to create your profile.</h1><p>Your profile picture will be used as the poster image for your room-search profile.</p><Link className="button" href={`/profile/complete?next=${encodeURIComponent('/listings/new/room-needed')}`}>Add profile picture</Link></div></main><Footer /></>;
   }
 
   if (saved) {

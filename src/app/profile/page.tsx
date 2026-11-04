@@ -200,7 +200,7 @@ export default function ProfilePage() {
                       <article className="profile-listing-row" key={listing.id}>
                         <div className="profile-listing-icon"><FileText size={17} /></div>
                         <div className="profile-listing-copy">
-                          <strong>{listing.title || (listing.intent === 'ROOM_NEEDED' ? 'Room-needed search' : 'Room listing')}</strong>
+                          <strong>{listing.title || (listing.intent === 'ROOM_NEEDED' ? 'Your room search' : 'Room listing')}</strong>
                           <span>{listing.intent === 'ROOM_NEEDED' ? 'Looking for a room' : 'Room available'} · {listing.status.toLowerCase()}</span>
                         </div>
                         {price && <strong className="profile-listing-price">
