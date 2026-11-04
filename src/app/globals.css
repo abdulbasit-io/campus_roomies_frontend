@@ -94,9 +94,6 @@ button { cursor:pointer; }
 .hero-visual-card-main strong { font-size:17px; line-height:1.05; letter-spacing:-.04em; }
 .hero-visual-mark { display:grid; place-items:center; width:34px; height:34px; border-radius:50%; background:var(--orange); overflow:hidden; }
 .hero-visual-mark img { width:24px; height:28px; object-fit:contain; filter:brightness(0) invert(1); }
-.hero-visual-card-float { left:0; bottom:28px; padding:14px 16px; color:var(--ink); transform:rotate(-8deg); }
-.hero-visual-card-float span { color:var(--muted); font-size:8px; font-weight:800; letter-spacing:.12em; }
-.hero-visual-card-float strong { color:var(--green); font-size:25px; line-height:1; }
 .hero-feature { height:485px; border-radius:20px; overflow:hidden; position:relative; background:#333; color:#fff; box-shadow:0 25px 55px #472d1e24; }
 .hero-feature-placeholder { background:transparent; box-shadow:none; }
 .hero-feature-reveal { transform-origin:center; }
