@@ -12,7 +12,7 @@ import { ArrowRight, Home, Plus } from 'lucide-react';
 
 const steps = [
   ['01', 'Discover', 'Start with a real place around your institution, not a maze of unrelated listings.'],
-  ['02', 'Understand', 'See the price, the distance, the living rhythm, and the details that shape daily life.'],
+  ['02', 'Understand', 'See the price, the living rhythm, and the details that shape daily life.'],
   ['03', 'Connect', 'When a place feels promising, reach the person behind it through a clear WhatsApp handoff.'],
   ['04', 'Settle in', 'Ask the questions that matter and make the next decision with your eyes open.'],
 ];

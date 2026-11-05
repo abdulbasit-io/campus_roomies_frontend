@@ -14,5 +14,5 @@ export function ContactGate({ listingId }: { listingId: string }) {
   if (!profile.profileComplete) return <Link className="button full-width" href={authLink('/profile/complete', contactPath)}><CheckCircle2 size={15} /> Complete your profile</Link>;
   if (!profile.phoneConfirmed) return <Link className="button full-width" href={authLink('/profile/complete', contactPath)}><MessageCircle size={15} /> Confirm your WhatsApp number</Link>;
 
-  return <><p className="muted-copy">Your interest is recorded before we open WhatsApp.</p><Link className="button full-width" href={contactPath}>Continue to WhatsApp</Link></>;
+  return <><Link className="button full-width" href={contactPath}>Continue to WhatsApp</Link></>;
 }
