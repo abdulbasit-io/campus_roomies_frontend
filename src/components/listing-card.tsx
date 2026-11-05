@@ -20,14 +20,13 @@ export function ListingCard({ listing, compact = false }: { listing: Listing; co
         <Link href={`/listings/${listing.id}`}><h3>{listing.title}</h3></Link>
         <div className="listing-pricing">
           {listing.intent !== 'ROOM_NEEDED' ? <div className="listing-share">
-            <p className="listing-price">{formatNaira(listing.price / 2)} <small>/ person / {listing.period}</small></p>
-            <span>You pay · split 2 ways</span>
+            <div className="listing-share-primary"><p className="listing-price">{formatNaira(listing.price / 2)} <small>/ {listing.period}</small></p><span>Split 2 ways</span></div>
             <small>Total rent: {formatNaira(listing.price)} / {listing.period}</small>
           </div> : <p className="listing-price">{formatNaira(listing.price)} <small>/ {listing.period}</small></p>}
         </div>
         <p className="listing-location"><MapPin size={13} /> {listing.area} · {listing.institution}</p>
         {listing.features.length > 0 && <div className="tag-row">{listing.features.map((feature) => <span className="tag" key={feature}>{feature}</span>)}</div>}
-        {!compact && <div className="listing-owner"><Link className="owner-link" href={listing.ownerUserId ? `/users/${listing.ownerUserId}` : `/listings/${listing.id}`}><span className="owner-avatar" style={listing.ownerPhotoUrl ? { backgroundImage: `url("${listing.ownerPhotoUrl}")` } : undefined}>{!listing.ownerPhotoUrl && listing.ownerInitials}</span></Link><Link className="owner-name" href={listing.ownerUserId ? `/users/${listing.ownerUserId}` : `/listings/${listing.id}`}>{listing.owner}</Link><Link className="button button-small button-quiet" href={`/listings/${listing.id}`}>View room</Link></div>}
+        {!compact && <div className="listing-owner"><Link className="owner-link" href={listing.ownerUserId ? `/users/${listing.ownerUserId}` : `/listings/${listing.id}`}><span className="owner-avatar" style={listing.ownerPhotoUrl ? { backgroundImage: `url("${listing.ownerPhotoUrl}")` } : undefined}>{!listing.ownerPhotoUrl && listing.ownerInitials}</span></Link><Link className="owner-name" href={listing.ownerUserId ? `/users/${listing.ownerUserId}` : `/listings/${listing.id}`}>{listing.owner}</Link><Link className="button button-small button-quiet" href={`/listings/${listing.id}`}>{listing.intent === 'ROOM_NEEDED' ? 'View profile' : 'View room'}</Link></div>}
       </div>
     </article>
   );
