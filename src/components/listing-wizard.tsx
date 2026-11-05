@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { Header, Footer } from '@/components/site-chrome';
 import { useEffect } from 'react';
@@ -8,6 +8,8 @@ import { useSearchParams } from 'next/navigation';
 import { DraftImage, Institution, InstitutionArea, createDraft, getDraft, listAreas, listInstitutions, ListingDraftInput, publishDraft, removeDraftImage, updateDraft, uploadDraftImages } from '@/lib/frontend-api';
 import { useSession } from '@/lib/session';
 import { trackAnalyticsEvent } from '@/lib/analytics';
+import { authLink } from '@/lib/redirect';
+import { clearLocalListingDraft, readLocalListingDraft, writeLocalListingDraft } from '@/lib/listing-local-draft';
 
 const steps = ['Details', 'Preferences', 'Photos', 'Review'];
 const roomTypes = [
@@ -82,6 +84,44 @@ export function ListingWizard() {
   const [uploadProgress, setUploadProgress] = useState<{ completed: number; total: number } | null>(null);
   const [published, setPublished] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
+  const localDraftRestored = useRef(false);
+  const localDraftPersistenceStarted = useRef(false);
+
+  useEffect(() => {
+    const localDraft = readLocalListingDraft('ROOM_AVAILABLE');
+    if (localDraft) {
+      const values = localDraft.values;
+      setStep(localDraft.step);
+      setDraftId(localDraft.draftId);
+      setTitle(typeof values.title === 'string' ? values.title : '');
+      setRoomType(typeof values.roomType === 'string' ? values.roomType : 'SINGLE_ROOM_SHARED_FLAT');
+      setRoomTypeOther(typeof values.roomTypeOther === 'string' ? values.roomTypeOther : '');
+      setSelected(values.selected && typeof values.selected === 'object' ? values.selected as Record<string, string> : {});
+      setInstitutionId(typeof values.institutionId === 'string' ? values.institutionId : '');
+      setAreaId(typeof values.areaId === 'string' ? values.areaId : '');
+      setLandmark(typeof values.landmark === 'string' ? values.landmark : '');
+      setPriceAmount(typeof values.priceAmount === 'string' ? values.priceAmount : '');
+      if (values.pricePeriod === 'YEAR' || values.pricePeriod === 'SESSION') setPricePeriod(values.pricePeriod);
+      if (values.availabilityType === 'AVAILABLE_NOW' || values.availabilityType === 'NEXT_SESSION' || values.availabilityType === 'SPECIFIC_DATE') setAvailabilityType(values.availabilityType);
+      setAvailabilityDate(typeof values.availabilityDate === 'string' ? values.availabilityDate : '');
+      setDescription(typeof values.description === 'string' ? values.description : '');
+    }
+    localDraftRestored.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!localDraftRestored.current) return;
+    if (!localDraftPersistenceStarted.current) {
+      localDraftPersistenceStarted.current = true;
+      return;
+    }
+    writeLocalListingDraft({
+      intent: 'ROOM_AVAILABLE',
+      step,
+      draftId,
+      values: { title, roomType, roomTypeOther, selected, institutionId, areaId, landmark, priceAmount, pricePeriod, availabilityType, availabilityDate, description },
+    });
+  }, [step, draftId, title, roomType, roomTypeOther, selected, institutionId, areaId, landmark, priceAmount, pricePeriod, availabilityType, availabilityDate, description]);
 
   useEffect(() => {
     listInstitutions().then(setInstitutions).catch((cause: Error) => setError(cause.message));
@@ -94,6 +134,7 @@ export function ListingWizard() {
   useEffect(() => {
     if (!ready) return;
     if (!profile) return;
+    if (localDraftRestored.current && readLocalListingDraft('ROOM_AVAILABLE')) return;
     getDraft().then((draft) => {
       if (!draft || draft.intent !== 'ROOM_AVAILABLE' || (searchParams.get('draft') && draft.id !== searchParams.get('draft'))) return;
       setDraftId(draft.id);
@@ -198,7 +239,7 @@ export function ListingWizard() {
 
   async function saveDraft() {
     if (!profile) {
-      window.location.assign(`/login?next=${encodeURIComponent('/listings/new/room-available')}`);
+      window.location.assign(authLink('/login', '/listings/new/room-available?resume=save'));
       return;
     }
     setPending(true);
@@ -215,7 +256,13 @@ export function ListingWizard() {
 
   async function publishListing() {
     if (!profile) {
-      window.location.assign(`/login?next=${encodeURIComponent('/listings/new/room-available')}`);
+      writeLocalListingDraft({
+        intent: 'ROOM_AVAILABLE',
+        step,
+        draftId,
+        values: { title, roomType, roomTypeOther, selected, institutionId, areaId, landmark, priceAmount, pricePeriod, availabilityType, availabilityDate, description },
+      });
+      window.location.assign(authLink('/login', '/listings/new/room-available?resume=publish'));
       return;
     }
     setPending(true);
@@ -235,6 +282,7 @@ export function ListingWizard() {
     try {
       const id = await persistDraft();
       await publishDraft(id);
+      clearLocalListingDraft('ROOM_AVAILABLE');
       void trackAnalyticsEvent('LISTING_PUBLISHED', {
         listingId: id,
         intent: 'ROOM_AVAILABLE',
@@ -284,7 +332,13 @@ export function ListingWizard() {
 
     if (step === 2 && pendingPhotos.length) {
       if (!profile) {
-        window.location.assign(`/login?next=${encodeURIComponent('/listings/new/room-available')}`);
+        writeLocalListingDraft({
+          intent: 'ROOM_AVAILABLE',
+          step,
+          draftId,
+          values: { title, roomType, roomTypeOther, selected, institutionId, areaId, landmark, priceAmount, pricePeriod, availabilityType, availabilityDate, description },
+        });
+        window.location.assign(authLink('/login', '/listings/new/room-available?resume=photos'));
         return;
       }
       setPending(true);
@@ -340,11 +394,11 @@ export function ListingWizard() {
   }
 
   if (published) return <><Header /><main className="success-page shell"><div className="success-icon">✓</div><p className="eyebrow">{isPublished ? 'Listing published' : 'Draft saved'}</p><h1>{isPublished ? 'Your listing is now available to students.' : 'Your draft is ready for your next step.'}</h1><p>{isPublished ? 'Students can now find your listing in discovery. You can manage it from My listings.' : 'We have saved your progress. Return to My listings whenever you are ready to continue.'}</p><div className="success-actions"><Link className="button" href="/profile/listings">Manage my listings</Link><Link className="button button-secondary" href="/browse">Browse rooms</Link></div></main><Footer /></>;
-  if (ready && profile && !profile.photoUrl) return <><Header /><main className="wizard-page shell"><div className="profile-photo-required"><h1>Add a profile picture to create a listing.</h1><p>Your picture is used as the poster image for a room-needed listing. You can add or change it in your profile.</p><Link className="button" href={`/profile/complete?next=${encodeURIComponent('/listings/new/room-available')}`}>Add profile picture</Link></div></main><Footer /></>;
+  if (ready && profile && !profile.photoUrl) return <><Header /><main className="wizard-page shell"><div className="profile-photo-required"><h1>Add a profile picture to create a listing.</h1><p>Your picture is used as the poster image for your listing. You can add or change it in your profile.</p><Link className="button" href={`/profile/complete?next=${encodeURIComponent('/listings/new/room-available')}`}>Add profile picture</Link></div></main><Footer /></>;
   return <><Header /><main className="wizard-page shell"><div className="wizard-top"><Link className="back-link" href="/">← Back home</Link><div className="progress-steps">{steps.map((item, index) => <button className={index === step ? 'current' : index < step ? 'complete' : ''} key={item} onClick={() => index <= step && setStep(index)}><span>{index + 1}</span>{item}</button>)}</div></div><div className="wizard-layout"><div className="wizard-main">
     {step === 0 && <><p className="eyebrow">Step 1 of 4 · Listing details</p><h1>Tell us about the room.</h1><p className="wizard-lede">The small details help someone decide whether this could be the right fit for their everyday.</p><div className="form-card"><label>Listing title <small>{title.length}/60</small><input maxLength={60} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Self-contained near Camp" /></label><label>Institution<select value={institutionId} onChange={(event) => { setInstitutionId(event.target.value); setAreaId(''); }}><option value="">Choose an institution</option>{institutions.map((institution) => <option key={institution.id} value={institution.id}>{institution.name}</option>)}</select></label><label>Area<select value={areaId} onChange={(event) => setAreaId(event.target.value)} disabled={!institutionId}><option value="">Choose an area</option>{areas.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}</select></label><label>Nearby landmark<input maxLength={160} value={landmark} onChange={(event) => setLandmark(event.target.value)} placeholder="Optional landmark or directions" /></label><fieldset><legend>Room type</legend><div className="choice-grid">{roomTypes.map(([value, label]) => <button className={roomType === value ? 'choice selected' : 'choice'} key={value} onClick={() => setRoomType(value)} type="button"><strong>{label}</strong><span>{value === 'SELF_CONTAINED' ? 'Private bath & kitchen' : value === 'OTHER' ? 'Describe another accommodation type' : 'A practical shared arrangement'}</span></button>)}</div></fieldset>{roomType === 'OTHER' && <label>Describe the room type<input maxLength={120} value={roomTypeOther} onChange={(event) => setRoomTypeOther(event.target.value)} placeholder="e.g. Studio apartment" /></label>}<div className="split-fields"><label>Price amount<input value={priceAmount} onChange={(event) => setPriceAmount(event.target.value.replace(/\\D/g, ''))} inputMode="numeric" placeholder="e.g. 250000" /></label><label>Pricing period<select value={pricePeriod} onChange={(event) => setPricePeriod(event.target.value as 'YEAR' | 'SESSION')}><option value="YEAR">Per year</option><option value="SESSION">Per session</option></select></label></div><label>Availability<select value={availabilityType} onChange={(event) => setAvailabilityType(event.target.value as typeof availabilityType)}><option value="AVAILABLE_NOW">Available now</option><option value="NEXT_SESSION">Next session</option><option value="SPECIFIC_DATE">Specific date</option></select></label>{availabilityType === 'SPECIFIC_DATE' && <label>Available from<input type="date" value={availabilityDate} onChange={(event) => setAvailabilityDate(event.target.value)} /></label>}<label>Description <small>{description.length}/500</small><textarea maxLength={500} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="What should someone know before they come to see it?" /></label></div></>}
     {step === 1 && <><p className="eyebrow">Step 2 of 4 · Living preferences</p><h1>Who would make a good fit?</h1><p className="wizard-lede">There is no perfect roommate. There is a better fit for the way you actually live.</p><div className="form-card">{preferenceGroups.map(([label, options]) => <fieldset key={label}><legend>{label}</legend><div className="chip-options">{options.map((option) => <button className={selected[label] === option ? 'chip selected' : 'chip'} key={option} onClick={() => setSelected((current) => ({ ...current, [label]: option }))} type="button">{option}{selected[label] === option && ' ✓'}</button>)}</div></fieldset>)}<label>Anything else someone should know? <small>Optional</small><textarea maxLength={500} placeholder="Quiet after 10pm? Cooking often? Tell them what makes the home work." /></label></div></>}
-    {step === 2 && <><p className="eyebrow">Step 3 of 4 · Photos</p><h1>Show people the space.</h1><p className="wizard-lede">Add at least 3 and up to 4 honest photos. They will upload together when you continue to review.</p><div className="form-card photo-uploader"><label className="upload-box"><span>＋</span><strong>Add photos</strong><small>JPEG, PNG, or WebP · up to 5 MB each</small><input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={pending || photos.length + pendingPhotos.length >= maxPhotos} onChange={selectPhotos} /></label><div className="photo-count">{photos.length + pendingPhotos.length} of {maxPhotos} photos selected</div>{uploadProgress && <div className="upload-progress" role="status" aria-live="polite"><div className="upload-progress-heading"><strong>Uploading your photos</strong><span>{uploadProgress.completed} of {uploadProgress.total} ready</span></div><progress {...(uploadProgress.completed ? { value: uploadProgress.completed } : {})} max={uploadProgress.total} aria-label={`${uploadProgress.completed} of ${uploadProgress.total} photos uploaded`} /><p>{uploadProgress.completed === 0 ? 'Connecting to the image service. Large photos may take a little longer on a slow connection.' : 'Please keep this page open while the remaining photos finish uploading.'}</p></div>}<div className="photo-grid">{photos.map((photo, index) => <div className="uploaded-photo" key={photo.id} style={{ backgroundImage: `url("${photo.url}")` }}><span>{index === 0 ? 'Cover photo' : `Photo ${index + 1}`}</span><button className="photo-remove" type="button" disabled={pending} onClick={() => removePhoto(photo)} aria-label={`Remove uploaded photo ${index + 1}`}>×</button></div>)}</div>{pendingPhotos.length > 0 && <div className="pending-photo-list"><strong>{pending ? 'Selected photos' : 'Ready to upload'}</strong>{pendingPhotos.map((file, index) => <PendingPhotoPreview key={`${file.name}-${file.lastModified}-${index}`} file={file} disabled={pending} onRemove={() => removePendingPhoto(index)} />)}</div>}</div></>}
+    {step === 2 && <><p className="eyebrow">Step 3 of 4 · Photos</p><h1>Show people the space.</h1>{!profile ? <div className="form-card photo-auth-gate"><p className="wizard-lede">Sign in before adding photos so your selected images can be uploaded securely and attached to this listing.</p><Link className="button" href={authLink('/login', '/listings/new/room-available?resume=photos')}>Sign in to add photos</Link></div> : <><p className="wizard-lede">Add at least 3 and up to 4 honest photos. They will upload together when you continue to review.</p><div className="form-card photo-uploader"><label className="upload-box"><span>＋</span><strong>Add photos</strong><small>JPEG, PNG, or WebP · up to 5 MB each</small><input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={pending || photos.length + pendingPhotos.length >= maxPhotos} onChange={selectPhotos} /></label><div className="photo-count">{photos.length + pendingPhotos.length} of {maxPhotos} photos selected</div>{uploadProgress && <div className="upload-progress" role="status" aria-live="polite"><div className="upload-progress-heading"><strong>Uploading your photos</strong><span>{uploadProgress.completed} of {uploadProgress.total} ready</span></div><progress {...(uploadProgress.completed ? { value: uploadProgress.completed } : {})} max={uploadProgress.total} aria-label={`${uploadProgress.completed} of ${uploadProgress.total} photos uploaded`} /><p>{uploadProgress.completed === 0 ? 'Connecting to the image service. Large photos may take a little longer on a slow connection.' : 'Please keep this page open while the remaining photos finish uploading.'}</p></div>}<div className="photo-grid">{photos.map((photo, index) => <div className="uploaded-photo" key={photo.id} style={{ backgroundImage: `url("${photo.url}")` }}><span>{index === 0 ? 'Cover photo' : `Photo ${index + 1}`}</span><button className="photo-remove" type="button" disabled={pending} onClick={() => removePhoto(photo)} aria-label={`Remove uploaded photo ${index + 1}`}>×</button></div>)}</div>{pendingPhotos.length > 0 && <div className="pending-photo-list"><strong>{pending ? 'Selected photos' : 'Ready to upload'}</strong>{pendingPhotos.map((file, index) => <PendingPhotoPreview key={`${file.name}-${file.lastModified}-${index}`} file={file} disabled={pending} onRemove={() => removePendingPhoto(index)} />)}</div>}</div></>}</>}
     {step === 3 && <><p className="eyebrow">Step 4 of 4 · Final check</p><h1>Review your listing.</h1><p className="wizard-lede">Read it once as someone who has never seen the place. Does it tell them enough to take the next step?</p><div className="review-card"><div className="review-photo" style={photos[0] ? { backgroundImage: `url("${photos[0].url}")` } : undefined} /><div className="review-copy"><span className="soft-badge">{roomTypes.find(([value]) => value === roomType)?.[1] === 'Other' ? roomTypeOther || 'Other' : roomTypes.find(([value]) => value === roomType)?.[1] ?? roomType}</span><h2>{title || 'Your listing title'}</h2><p>{institutions.find((item) => item.id === institutionId)?.name ?? 'Institution'} · {areas.find((item) => item.id === areaId)?.name ?? 'Area'}{landmark ? ` · ${landmark}` : ''}</p><strong>{priceAmount ? `₦${Number(priceAmount).toLocaleString('en-NG')}` : 'Price not set'} <small>/ {pricePeriod.toLowerCase()}</small></strong><div className="tag-row">{Object.values(selected).map((value) => <span className="tag" key={value}>{value}</span>)}</div></div></div><div className="review-note">Your contact details stay private. Eligible students will reach you through the WhatsApp handoff.</div></>}
     {missingFields.length > 0 && <div className="wizard-validation" role="alert"><strong>Complete these required items to continue:</strong><ul>{missingFields.map((field) => <li key={field}>{field}</li>)}</ul></div>}
     {error && <p className="form-error" role="alert">{error}</p>}

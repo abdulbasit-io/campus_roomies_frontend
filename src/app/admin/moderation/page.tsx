@@ -81,7 +81,7 @@ export default function AdminModerationQueuePage() {
                   <h3>{report.title}</h3>
                   <p className="admin-report-summary">{report.details || 'No additional details were provided.'}</p>
                   <div className="admin-report-meta">
-                    <span>{report.intent === 'ROOM_AVAILABLE' ? 'Room available' : 'Room needed'}</span>
+                    <span>{report.intent === 'ROOM_AVAILABLE' ? 'Room available' : 'Looking for a room'}</span>
                     <span>Reported {formatDate(report.createdAt)}</span>
                   </div>
                 </div>

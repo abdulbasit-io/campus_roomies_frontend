@@ -106,7 +106,7 @@ export default function AdminReportDetailPage() {
           </div>
           <dl className="admin-detail-list">
             <div><dt>Reason</dt><dd>{reasonLabels[report.reason]}</dd></div>
-            <div><dt>Listing intent</dt><dd>{report.intent === 'ROOM_AVAILABLE' ? 'Room available' : 'Room needed'}</dd></div>
+            <div><dt>Listing intent</dt><dd>{report.intent === 'ROOM_AVAILABLE' ? 'Room available' : 'Looking for a room'}</dd></div>
             <div><dt>Listing status</dt><dd><span className={`admin-status ${report.listingStatus === 'ACTIVE' ? '' : 'is-archived'}`}>{report.listingStatus.toLowerCase()}</span></dd></div>
             <div><dt>Reporter notes</dt><dd className="admin-reporter-notes">{report.details || 'No additional details were provided.'}</dd></div>
           </dl>
