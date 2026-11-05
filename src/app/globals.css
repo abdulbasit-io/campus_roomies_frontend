@@ -64,25 +64,24 @@ button { cursor:pointer; }
 .button-quiet { margin-left:auto; padding:8px 11px; background:var(--warm); color:var(--orange-dark); box-shadow:none; }
 .full-width { width:100%; }
 .eyebrow { color:var(--orange-dark); text-transform:uppercase; letter-spacing:.14em; font-size:11px; font-weight:800; margin:0 0 14px; }
-.hero-section { background:var(--warm); border-bottom:1px solid var(--line); padding:62px 0 58px; overflow:hidden; }
+.hero-section { position:relative; background:var(--warm); border-bottom:1px solid var(--line); padding:62px 0 58px; overflow:hidden; }
+.hero-section::before { content:""; position:absolute; width:560px; height:560px; right:-130px; top:-155px; border-radius:50%; background:radial-gradient(circle, #f3a05b42 0%, #f3a05b1c 38%, transparent 72%); filter:blur(8px); pointer-events:none; }
 .hero-grid { display:grid; grid-template-columns:minmax(0, 900px); justify-content:center; position:relative; }
-.hero-copy { width:100%; }
+.hero-copy { width:100%; position:relative; z-index:1; }
 .hero-copy h1 { font-size:clamp(48px, 6vw, 80px); line-height:.98; letter-spacing:-.075em; margin:0; font-weight:800; }
-.hero-copy h1 em { color:var(--orange); font-style:normal; }
+.hero-copy h1 em { color:var(--orange); font-style:normal; background:linear-gradient(105deg, #e87516 10%, #ed8b42 58%, #e86655 100%); background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 .hero-lede { color:var(--muted); line-height:1.7; max-width:520px; font-size:16px; margin:25px 0 30px; }
-.hero-role-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; max-width:900px; }
-.hero-role-card { display:flex; align-items:center; justify-content:space-between; gap:15px; min-height:104px; padding:22px; border:1px solid var(--line); border-radius:13px; background:var(--paper); color:var(--ink); box-shadow:0 12px 30px #9b80601c; transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+.hero-role-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; max-width:680px; margin-top:16px; }
+.hero-role-card { display:flex; align-items:center; justify-content:space-between; gap:15px; min-height:72px; padding:15px 18px; border:1px solid var(--line); border-radius:11px; background:var(--paper); color:var(--ink); box-shadow:0 8px 20px #9b80601a; transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
 .hero-role-card:hover { transform:translateY(-3px); border-color:#edc6a6; box-shadow:0 18px 35px #9b80602b; }
 .hero-role-card span { display:grid; gap:7px; }
-.hero-role-card strong { font-size:15px; }
-.hero-role-card small { color:var(--orange-dark); font-size:13px; font-weight:700; }
+.hero-role-card strong { font-size:13px; }
+.hero-role-card small { color:var(--orange-dark); font-size:12px; font-weight:700; }
 .hero-role-card svg { color:var(--orange-dark); transition:transform .2s ease; }
 .hero-role-card:hover svg { transform:translateX(3px); }
 .hero-role-card-orange { background:#fff3e8; border-color:#edc6a6; }
-.hero-browse { margin-top:28px; }
-.hero-browse > p { color:var(--ink); font-size:13px; font-weight:700; margin:0 0 9px; }
 .hero-note { color:#9a9088; font-size:12px; margin-top:14px; }
-.hero-search { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr) max-content; gap:10px; padding:9px; background:#fff; border:1px solid var(--line); box-shadow:0 15px 40px #9b80601c; border-radius:13px; max-width:900px; min-width:0; }
+.hero-search { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr) max-content; gap:10px; padding:11px; background:#fff; border:1px solid #eee8e2; box-shadow:0 12px 32px -8px #00000014, 0 4px 12px #0000000a; border-radius:13px; max-width:900px; min-width:0; }
 .hero-search label,.filter-bar label { display:flex; flex-direction:column; gap:5px; color:#9a9088; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; padding:5px 10px; }
 .hero-search input,.hero-search select,.filter-bar select { border:0; background:transparent; outline:0; color:var(--ink); font-size:13px; font-weight:500; text-transform:none; letter-spacing:0; padding:3px 0; min-width:0; }.hero-search select { width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.hero-search > .button { min-width:132px; white-space:nowrap; }
 .hero-visual { position:absolute; z-index:0; right:-120px; top:20px; width:270px; height:270px; transform:rotate(8deg); pointer-events:none; }
