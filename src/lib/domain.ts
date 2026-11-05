@@ -6,6 +6,7 @@ export type ListingStatus = (typeof listingStatuses)[number];
 
 export type Listing = {
   id: string;
+  intent?: ListingIntent;
   title: string;
   area: string;
   institution: string;

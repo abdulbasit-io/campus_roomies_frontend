@@ -225,6 +225,7 @@ export function toCardListing(listing: ApiListing): Listing {
   ].filter((feature): feature is string => Boolean(feature));
   return {
     id: listing.id,
+    intent: listing.intent,
     title: listing.title,
     area: listing.area,
     institution: listing.abbreviation || listing.institution,
