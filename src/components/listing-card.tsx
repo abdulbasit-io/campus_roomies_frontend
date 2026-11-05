@@ -19,8 +19,11 @@ export function ListingCard({ listing, compact = false }: { listing: Listing; co
         <div className="listing-kicker"><span>{listing.roomType}</span>{listing.distance && <><span>·</span><span>{listing.distance}</span></>}</div>
         <Link href={`/listings/${listing.id}`}><h3>{listing.title}</h3></Link>
         <div className="listing-pricing">
-          <p className="listing-price">{formatNaira(listing.price)} <small>/ {listing.period}</small></p>
-          {listing.intent !== 'ROOM_NEEDED' && <p className="listing-share"><span>Your share</span><strong>{formatNaira(listing.price / 2)}</strong><small>/ {listing.period}</small></p>}
+          {listing.intent !== 'ROOM_NEEDED' ? <div className="listing-share">
+            <p className="listing-price">{formatNaira(listing.price / 2)} <small>/ person / {listing.period}</small></p>
+            <span>You pay · split 2 ways</span>
+            <small>Total rent: {formatNaira(listing.price)} / {listing.period}</small>
+          </div> : <p className="listing-price">{formatNaira(listing.price)} <small>/ {listing.period}</small></p>}
         </div>
         <p className="listing-location"><MapPin size={13} /> {listing.area} · {listing.institution}</p>
         {listing.features.length > 0 && <div className="tag-row">{listing.features.map((feature) => <span className="tag" key={feature}>{feature}</span>)}</div>}
