@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, Flag, MapPin, X } from 'lucide-react';
 import { Header, Footer } from '@/components/site-chrome';
 import { ContactGate } from '@/components/contact-gate';
@@ -52,11 +53,17 @@ export default function ListingDetailsPage() {
 
   useEffect(() => {
     if (selectedPhoto === null) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') setSelectedPhoto(null);
     }
     window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
+    return () => {
+      window.removeEventListener('keydown', closeOnEscape);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [selectedPhoto]);
 
   useEffect(() => {
@@ -131,13 +138,16 @@ export default function ListingDetailsPage() {
         </button>)}</div>
       </div>
       </Reveal>
-      {selectedPhoto !== null && photos[selectedPhoto] && <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label={`Listing photo ${selectedPhoto + 1} of ${photos.length}`}>
-        <button className="photo-lightbox-close" type="button" onClick={() => setSelectedPhoto(null)} aria-label="Close photo viewer"><X size={22} /></button>
-        {selectedPhoto > 0 && <button className="photo-lightbox-nav photo-lightbox-prev" type="button" onClick={() => setSelectedPhoto((current) => current === null ? null : current - 1)} aria-label="Previous photo"><ChevronLeft size={28} /></button>}
-        <ResilientImage src={photos[selectedPhoto]} alt={`${listing.title} photo ${selectedPhoto + 1}`} className="photo-lightbox-image" sizes="100vw" />
-        {selectedPhoto < photos.length - 1 && <button className="photo-lightbox-nav photo-lightbox-next" type="button" onClick={() => setSelectedPhoto((current) => current === null ? null : current + 1)} aria-label="Next photo"><ChevronRight size={28} /></button>}
-        <span className="photo-lightbox-count">{selectedPhoto + 1} / {photos.length}</span>
-      </div>}
+      {selectedPhoto !== null && photos[selectedPhoto] && typeof document !== 'undefined' && createPortal(
+        <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label={`Listing photo ${selectedPhoto + 1} of ${photos.length}`}>
+          <button className="photo-lightbox-close" type="button" onClick={() => setSelectedPhoto(null)} aria-label="Close photo viewer"><X size={22} /></button>
+          {selectedPhoto > 0 && <button className="photo-lightbox-nav photo-lightbox-prev" type="button" onClick={() => setSelectedPhoto((current) => current === null ? null : current - 1)} aria-label="Previous photo"><ChevronLeft size={28} /></button>}
+          <ResilientImage src={photos[selectedPhoto]} alt={`${listing.title} photo ${selectedPhoto + 1}`} className="photo-lightbox-image" sizes="100vw" />
+          {selectedPhoto < photos.length - 1 && <button className="photo-lightbox-nav photo-lightbox-next" type="button" onClick={() => setSelectedPhoto((current) => current === null ? null : current + 1)} aria-label="Next photo"><ChevronRight size={28} /></button>}
+          <span className="photo-lightbox-count">{selectedPhoto + 1} / {photos.length}</span>
+        </div>,
+        document.body,
+      )}
       <Reveal className="details-reveal details-heading-reveal"><div className="details-heading"><div><p className="eyebrow">{card.roomType} · {card.availability}</p><h1>{listing.title}</h1><p className="details-location"><MapPin size={14} /> {listing.institution} · {listing.area}{listing.landmark ? ` · ${listing.landmark}` : ''}</p></div><span className={`soft-badge listing-status-badge ${isActiveListing ? 'is-active' : 'is-unavailable'}`}>{statusLabels[listing.status] ?? 'Unavailable listing'}</span></div></Reveal>
       <Reveal as="section" className="content-card details-reveal" delay={70}><h2>{listing.intent === 'ROOM_NEEDED' ? 'About this seeker' : 'About this place'}</h2><p>{listing.intent === 'ROOM_NEEDED' ? listing.about ?? listing.description : listing.description}</p>{listing.intent === 'ROOM_NEEDED' && listing.targetArea && <p className="muted">Preferred area: {listing.targetArea}</p>}{card.features.length > 0 && <div className="tag-row">{card.features.map((feature) => <span className="tag" key={feature}>{feature}</span>)}</div>}</Reveal>
       {(preferenceEntries.length > 0 || preferences.lifestyleTraits?.length) && <Reveal as="section" className="content-card details-reveal" delay={120}><h2>Living preferences</h2><p className="muted">Clear expectations make shared homes easier.</p><div className="preference-grid">{preferenceEntries}{preferences.lifestyleTraits?.map((trait) => <div className="preference-item" key={trait}><strong>Daily routine</strong><span>{formatPreferenceValue(trait)}</span></div>)}</div></Reveal>}
