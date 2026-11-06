@@ -4,7 +4,7 @@
 
 :root { --orange:#e87516; --orange-dark:#c85e0b; --ink:#24211f; --muted:#746e69; --line:#e7e1db; --paper:#fffdfb; --warm:#fbf5ef; --green:#36795a; --cta-background:#24211f; --cta-foreground:#fff; }
 .dark { --ink:#f4eee9; --muted:#b6aaa2; --line:#403a35; --paper:#1d1a18; --warm:#28231f; --green:#79bb91; --orange-dark:#f29345; --cta-background:#11100f; --cta-foreground:#f4eee9; }.dark .site-header,.dark .site-footer,.dark .form-card,.dark .auth-card,.dark .profile-card,.dark .account-menu,.dark .price-card,.dark .content-card,.dark .listing-card,.dark .intent-entry-card,.dark .choice,.dark .chip,.dark .form-card input,.dark .form-card select,.dark .form-card textarea,.dark .auth-card input,.dark .auth-card select,.dark .auth-card textarea { background:#24201d; }.dark .hero-section,.dark .section-warm { background:#28231f; }.dark .hero-search,.dark .aside-card,.dark .handoff-card { background:#24201d; color:var(--ink); }.dark .intent-card-orange,.dark .choice.selected,.dark .chip.selected { background:#382b21; border-color:#89501f; color:var(--ink); }.dark .hero-role-card { background:#24201d; border-color:#4b4038; }.dark .hero-role-card-orange { background:#382b21; border-color:#89501f; }.dark .hero-role-card-orange .hero-role-action { background:#24201d; border-color:#89501f; color:#f6a05b; }.dark .listing-share span { background:#382b21; border-color:#89501f; }.dark .session-warning { background:#33271e; color:#f2c59d; }.dark .button-secondary { color:var(--ink); }.dark .cta-panel { background:var(--cta-background); color:var(--cta-foreground); }.dark .cta-panel .button-secondary { color:var(--cta-foreground); }.theme-toggle { border:1px solid var(--line); background:transparent; color:var(--muted); border-radius:7px; width:31px; height:31px; display:grid; place-items:center; }
-.account-listing-card { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:14px 20px; align-items:center; }
+.account-listing-card { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:20px 28px; align-items:center; }
 .account-listing-summary { min-width:0; display:grid; gap:5px; }
 .account-listing-summary strong { overflow-wrap:anywhere; }
 .account-listing-summary small { color:var(--muted); font-size:12px; }
@@ -26,7 +26,7 @@
 .account-interest-person .tag-row { margin-top:11px; }
 .dark .account-interest-person { background:#24201d; }
 @media (max-width:560px) {
-  .account-listing-card { grid-template-columns:1fr; gap:12px; }
+  .account-listing-card { grid-template-columns:1fr; gap:18px; }
   .account-listing-card > .admin-row-actions { justify-content:flex-start; }
   .account-interest-person-heading { align-items:flex-start; }
   .account-interest-person-heading time { margin-left:auto; padding-top:4px; }
@@ -217,7 +217,7 @@ button { cursor:pointer; }
 .admin-table tr:last-child td { border-bottom:0; }
 .admin-table-link,.admin-action-link { color:var(--orange-dark); font-weight:700; }
 .admin-action-link { border:0; padding:6px; background:transparent; font-size:12px; }
-.admin-row-actions { display:flex; align-items:center; gap:9px; }
+.admin-row-actions { display:flex; align-items:center; flex-wrap:wrap; gap:12px 18px; }
 .admin-icon-action { width:34px; height:34px; display:grid; place-items:center; border:1px solid var(--line); border-radius:8px; background:transparent; color:var(--muted); }
 .admin-icon-action:hover:not(:disabled) { color:var(--orange-dark); border-color:var(--orange); }
 .admin-icon-action:disabled,.admin-area-edit button:disabled { opacity:.5; cursor:not-allowed; }
@@ -323,6 +323,29 @@ button { cursor:pointer; }
   .admin-sidebar nav a { flex-direction:column; gap:4px; padding:8px 10px; font-size:10px; }
   .admin-sidebar nav a span { font-size:10px; }
   .admin-main { padding:28px 18px 50px; }
+}
+@media (max-width:560px) {
+  .account-page { width:min(100% - 28px, 1280px); padding-top:38px; padding-bottom:72px; }
+  .account-page-heading { align-items:stretch; flex-direction:column; gap:20px; margin-bottom:24px; }
+  .account-page-heading h1 { font-size:42px; }
+  .account-page-heading > .button { width:100%; }
+  .account-listing-card { gap:16px; padding:18px; }
+  .account-listing-summary { gap:7px; }
+  .account-listing-summary strong { font-size:16px; line-height:1.35; }
+  .account-listing-summary small { font-size:11px; }
+  .account-listing-card > .admin-row-actions { width:100%; display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
+  .account-listing-card > .admin-row-actions .admin-action-link { min-height:38px; padding:9px 8px; border:1px solid var(--line); border-radius:8px; text-align:center; }
+  .account-listing-card > .admin-row-actions .admin-action-link:hover { background:var(--warm); }
+  .account-interest-panel { margin-top:2px; }
+  .account-interest-toggle { min-height:44px; }
+}
+@media (max-width:380px) {
+  .account-page { width:min(100% - 20px, 1280px); }
+  .account-page-heading h1 { font-size:36px; }
+  .account-listing-card > .admin-row-actions { grid-template-columns:1fr; }
+}
+@media (min-width:561px) {
+  .account-listing-card > .admin-row-actions { justify-content:flex-end; max-width:430px; }
 }
 @media (max-width:560px) {
   .admin-page-heading { align-items:flex-start; flex-direction:column; }
