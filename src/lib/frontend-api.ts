@@ -282,6 +282,10 @@ export function getOwnedListing(id: string): Promise<ApiListing> {
   return apiRequest(`/me/listings/owned/${id}`);
 }
 
+export function getOwnedListingForEdit(id: string): Promise<OwnedDraft> {
+  return apiRequest(`/me/listings/${id}`);
+}
+
 export function getMyProfile(): Promise<Profile> {
   return apiRequest('/me/profile');
 }
@@ -339,6 +343,10 @@ export function createDraft(input: ListingDraftInput): Promise<OwnedDraft> {
 
 export function updateDraft(id: string, input: Partial<ListingDraftInput>): Promise<OwnedDraft> {
   return apiMutation(`/me/listings/${id}`, 'PATCH', input);
+}
+
+export function archiveListing(id: string): Promise<OwnedDraft> {
+  return apiMutation(`/me/listings/${id}`, 'DELETE');
 }
 
 export function publishDraft(id: string): Promise<OwnedDraft> {

@@ -8,6 +8,7 @@ import {
   createDraft,
   formatAvailabilityDate,
   getDraft,
+  getOwnedListingForEdit,
   Institution,
   InstitutionArea,
   listAreas,
@@ -60,6 +61,7 @@ export function SeekerWizard() {
   const [draftId, setDraftId] = useState(searchParams.get('draft') ?? '');
   const [saved, setSaved] = useState(false);
   const [published, setPublished] = useState(false);
+  const [editingActive, setEditingActive] = useState(() => Boolean(searchParams.get('edit')));
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [missingFields, setMissingFields] = useState<string[]>([]);
@@ -115,6 +117,35 @@ export function SeekerWizard() {
 
   useEffect(() => {
     if (!ready || !profile) return;
+    const editId = searchParams.get('edit');
+    if (editId) {
+      getOwnedListingForEdit(editId).then((listing) => {
+        if (listing.intent !== 'ROOM_NEEDED') return;
+        setEditingActive(listing.status === 'ACTIVE');
+        setDraftId(listing.id);
+        setBudget(listing.target_budget_amount ? String(listing.target_budget_amount) : '');
+        if (listing.target_budget_period) setBudgetPeriod(listing.target_budget_period);
+        setInstitutionId(listing.institution_id ?? '');
+        setAreaId(listing.target_area_id ?? listing.area_id ?? '');
+        setAccommodationType(listing.accommodation_type ?? '');
+        setAccommodationTypeOther(listing.accommodation_type_other ?? '');
+        setTitle(listing.title ?? '');
+        setAvailabilityType(listing.availability_type ?? '');
+        setAvailabilityDate(listing.availability_date ?? '');
+        setAbout(listing.about ?? '');
+        const preferences = listing.preferences;
+        if (preferences) {
+          const gender = preferences.roommate_gender === 'MALE' ? 'Male only' : preferences.roommate_gender === 'FEMALE' ? 'Female only' : undefined;
+          setSelected({
+            ...(gender ? { 'Roommate gender': gender } : {}),
+            ...(typeof preferences.study_atmosphere === 'string' ? { 'Study atmosphere': preferences.study_atmosphere } : {}),
+            ...(typeof preferences.utility_preference === 'string' ? { 'Power and utilities': preferences.utility_preference } : {}),
+            ...(Array.isArray(preferences.lifestyle_traits) && typeof preferences.lifestyle_traits[0] === 'string' ? { 'Daily rhythm': preferences.lifestyle_traits[0] } : {}),
+          });
+        }
+      }).catch((cause: Error) => setError(cause.message));
+      return;
+    }
     if (localDraftRestored.current && readLocalListingDraft('ROOM_NEEDED')) return;
     getDraft().then((draft) => {
       const requestedId = searchParams.get('draft');
@@ -251,7 +282,7 @@ export function SeekerWizard() {
     }
     try {
       const id = await persistDraft();
-      await publishDraft(id);
+      if (!editingActive) await publishDraft(id);
       clearLocalListingDraft('ROOM_NEEDED');
       setPublished(true);
       setSaved(true);
@@ -272,9 +303,9 @@ export function SeekerWizard() {
         <Header />
         <main className="success-page shell">
           <div className="success-icon">✓</div>
-          <p className="eyebrow">{published ? 'Listing published' : 'Draft saved'}</p>
-          <h1>{published ? 'Your search is now visible to potential roommates.' : 'The right room may find you next.'}</h1>
-          <p>{published ? 'Students with suitable rooms can now discover your search.' : 'Your progress is saved. Complete your profile when you are ready to publish and become visible to people with suitable rooms.'}</p>
+          <p className="eyebrow">{published && editingActive ? 'Listing updated' : published ? 'Listing published' : 'Draft saved'}</p>
+          <h1>{published && editingActive ? 'Your search has been updated.' : published ? 'Your search is now visible to potential roommates.' : 'The right room may find you next.'}</h1>
+          <p>{published && editingActive ? 'The latest details are now visible to potential roommates.' : published ? 'Students with suitable rooms can now discover your search.' : 'Your progress is saved. Complete your profile when you are ready to publish and become visible to people with suitable rooms.'}</p>
           <div className="success-actions"><Link className="button" href="/profile/listings">Manage my listings</Link><Link className="button button-secondary" href="/browse">Browse rooms</Link></div>
         </main>
         <Footer />
@@ -311,7 +342,7 @@ export function SeekerWizard() {
             {step === 3 && <><p className="eyebrow">Step 4 of 4 · Final check</p><h1>Make sure it sounds like you.</h1><p className="wizard-lede">This is what people will see when they are looking for someone who might fit their room.</p><div className="seeker-preview"><div className="owner-avatar owner-avatar-large seeker-preview-avatar" style={profile?.photoUrl ? { backgroundImage: `url("${profile.photoUrl}")` } : undefined}>{!profile?.photoUrl && (profile?.firstName?.slice(0, 1) ?? 'A')}</div><div><span className="soft-badge">Looking for a room</span><h2>{title || 'Your search title'}</h2><p>{selectedInstitution} · {selectedArea}</p><p>{accommodationOptions.find(([value]) => value === accommodationType)?.[1] === 'Other' ? accommodationTypeOther || 'Other accommodation' : accommodationOptions.find(([value]) => value === accommodationType)?.[1] ?? 'Preferred accommodation'} · {availabilityType === 'AVAILABLE_NOW' ? 'Looking now' : availabilityType === 'SPECIFIC_DATE' ? `Looking from ${formatAvailabilityDate(availabilityDate) ?? 'a specific date'}` : availabilityOptions.find(([value]) => value === availabilityType)?.[1] ?? 'Move-in timing'}</p><p>Budget · {budget ? `₦${Number(budget).toLocaleString('en-NG')}` : 'Your target budget'} / {budgetPeriodLabel}</p><div className="tag-row">{Object.values(selected).slice(0, 3).map((value) => <span className="tag" key={value}>{value}</span>)}</div><p className="preview-about">{about || 'Your short introduction will appear here.'}</p></div></div></>}
             {missingFields.length > 0 && <div className="wizard-validation" role="alert"><strong>Complete these required items to continue:</strong><ul>{missingFields.map((field) => <li key={field}>{field}</li>)}</ul></div>}
             {error && <p className="form-error" role="alert">{error}</p>}
-            <div className="wizard-actions"><button className="button button-secondary" disabled={step === 0 || pending} onClick={() => setStep((current) => current - 1)}>← Back</button>{step < 3 ? <button className="button" disabled={pending} onClick={continueToNextStep}>Continue →</button> : <div className="admin-row-actions"><button className="button button-secondary" disabled={pending} onClick={saveDraft}>{pending ? 'Saving…' : 'Save draft'}</button><button className="button" disabled={pending} onClick={publishListing}>{pending ? 'Publishing…' : 'Publish search'}</button></div>}</div>
+            <div className="wizard-actions"><button className="button button-secondary" disabled={step === 0 || pending} onClick={() => setStep((current) => current - 1)}>← Back</button>{step < 3 ? <button className="button" disabled={pending} onClick={continueToNextStep}>Continue →</button> : <div className="admin-row-actions"><button className="button button-secondary" disabled={pending} onClick={saveDraft}>{pending ? 'Saving…' : editingActive ? 'Save changes' : 'Save draft'}</button><button className="button" disabled={pending} onClick={publishListing}>{pending ? (editingActive ? 'Saving…' : 'Publishing…') : editingActive ? 'Save changes' : 'Publish search'}</button></div>}</div>
           </div>
           <aside className="wizard-aside"><div className="aside-card"><p className="eyebrow">Your privacy matters</p><h2>Be visible without oversharing.</h2><p>People can understand your preferences without seeing your phone number or private account details.</p></div><div className="aside-card aside-card-muted"><strong>{step + 1} of 4</strong><span> steps completed in this draft</span><div className="mini-progress"><i style={{ width: `${((step + 1) / 4) * 100}%` }} /></div></div></aside>
         </div>
