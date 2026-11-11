@@ -669,6 +669,88 @@ button { cursor:pointer; }
   .admin-form-actions > * { width:100%; }
 }
 
+/* Admin navigation and content remain usable on narrow screens. */
+@media (max-width:850px) {
+  .admin-sidebar {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:
+      "brand account"
+      "nav nav";
+    gap:12px 16px;
+    padding:13px 18px 0;
+  }
+  .admin-sidebar > .brand { grid-area:brand; }
+  .admin-sidebar nav {
+    grid-area:nav;
+    justify-content:flex-start;
+    min-width:0;
+    margin:0 -18px;
+    padding:0 18px 10px;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  .admin-sidebar nav::-webkit-scrollbar { display:none; }
+  .admin-sidebar nav a,
+  .admin-sidebar nav a:first-child {
+    flex:0 0 auto;
+    flex-direction:row;
+    gap:8px;
+    min-height:42px;
+    padding:9px 11px;
+    font-size:12px;
+    white-space:nowrap;
+  }
+  .admin-sidebar nav a span { font-size:inherit; }
+  .admin-sidebar-account {
+    grid-area:account;
+    grid-column:auto;
+    margin:0;
+    padding:0;
+    border:0;
+  }
+  .admin-sidebar-account-icon,
+  .admin-sidebar-account-copy { display:none; }
+  .admin-logout { margin:0; min-height:42px; padding:9px 10px; }
+  .admin-logout span { display:none; }
+  .admin-main { padding:30px 18px 52px; }
+  .admin-report-detail-grid { grid-template-columns:1fr; }
+  .analytics-actions > div { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .analytics-breakdown-grid { grid-template-columns:1fr; }
+}
+
+@media (max-width:560px) {
+  .admin-sidebar { padding-inline:14px; }
+  .admin-sidebar nav { margin-inline:-14px; padding-inline:14px; }
+  .admin-main { padding:24px 14px 44px; }
+  .admin-page-heading h1 { font-size:clamp(30px,9vw,38px); }
+  .admin-page-heading .admin-muted { max-width:42ch; }
+  .admin-panel,
+  .admin-stat-card { padding:16px; border-radius:12px; }
+  .admin-panel-heading { width:100%; }
+  .admin-panel-heading > :first-child { min-width:0; }
+  .admin-panel-heading .arrow-link { align-self:flex-start; }
+  .admin-checkbox,
+  .admin-filter,
+  .feedback-status-filter { width:100%; }
+  .admin-filter select,
+  .feedback-status-filter select { flex:1; min-width:0; }
+  .admin-table-wrap { margin-inline:-16px; width:calc(100% + 32px); padding-inline:16px; }
+  .admin-table { min-width:620px; }
+  .admin-table th,
+  .admin-table td { padding:11px 12px; }
+  .admin-area-row { align-items:flex-start; flex-direction:column; gap:11px; }
+  .admin-area-edit { width:100%; }
+  .admin-pagination > div { gap:6px; }
+  .admin-pagination .button { min-height:40px; }
+  .analytics-controls { width:100%; justify-content:stretch; }
+  .analytics-controls > * { flex:1; }
+  .analytics-last-updated { flex:1 0 100%; }
+  .analytics-actions > div { grid-template-columns:1fr; }
+  .analytics-funnel > ol > li { grid-template-columns:30px minmax(0,1fr) auto; gap:9px; }
+  .analytics-funnel li small { grid-column:2/-1; text-align:left; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .browse-page,.details-page,.wizard-page,.auth-page,.info-page,.profile-page,.feedback-page,.account-page {
     animation:none;
