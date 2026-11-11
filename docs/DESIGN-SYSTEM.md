@@ -13,27 +13,48 @@ Campus Roomies should feel:
 - Spacious, readable, and low-pressure
 - Human and community-oriented
 
-Avoid excessive gradients, loud animations, dense dashboards, overly rounded app styling, unsupported claims, and competing accent colors.
+Avoid excessive gradients, loud animations, dense dashboards, overly rounded app styling, unsupported claims, and competing accent colors. Campus Roomies remains an orange-led brand; the supporting colors should add calm and warmth without turning the product into a green brand.
 
 The guiding idea is:
 
-> A calmer way to find a room and a living situation that feels like it could work.
+> Find compatible roommates and better housing near campus.
 
 ## 2. Color system
+
+The palette should feel warm, calm, and lived-in. Orange provides energy and recognition, while muted sage and soft terracotta add belonging, reassurance, and depth.
+
+### Brand palette
+
+| Role | Color | Use |
+|---|---|---|
+| Campus orange | `#eb741b` | Primary actions, active states, links, brand emphasis |
+| Warm cream | `#f8f3ec` | Page atmosphere, hero and large section backgrounds |
+| Soft charcoal | `#292724` | Headlines, body text, navigation, strong contrast |
+| Muted sage | `#91a58d` | Calm surfaces, compatibility indicators, process accents |
+| Soft terracotta | `#ebc8ae` | Supporting illustration shapes and warm decorative surfaces |
+| White / off-white | `#fffdfb` | Cards, forms, and surfaces requiring separation |
+
+Use the colors in an intentionally uneven balance:
+
+- Warm cream and white/off-white should carry most of the interface.
+- Orange should remain the recognizable action and brand color.
+- Charcoal should provide structure and readable contrast.
+- Sage and terracotta should be restrained supporting accents, not competing action colors.
 
 ### Light mode
 
 | Role | Color |
 |---|---|
-| Primary orange | `#e87516` |
+| Primary orange | `#eb741b` |
 | Dark orange / hover | `#c85e0b` |
-| Main text | `#24211f` |
+| Main text | `#292724` |
 | Muted text | `#746e69` |
 | Border / divider | `#e7e1db` |
 | Page background | `#fffdfb` |
-| Warm section background | `#fbf5ef` |
-| Success green | `#36795a` |
-| Dark CTA background | `#24211f` |
+| Warm section background | `#f8f3ec` |
+| Muted sage | `#91a58d` |
+| Soft terracotta | `#ebc8ae` |
+| Dark CTA background | `#292724` |
 | CTA text | `#ffffff` |
 
 ### Dark mode
@@ -45,12 +66,27 @@ The guiding idea is:
 | Border / divider | `#403a35` |
 | Page background | `#1d1a18` |
 | Warm section background | `#28231f` |
-| Green | `#79bb91` |
+| Muted sage | `#79bb91` |
+| Soft terracotta | `#9f7258` |
 | Orange hover | `#f29345` |
 | Dark surface | `#24201d` |
 | CTA background | `#11100f` |
 
-Orange is reserved for primary actions, emphasis, links, and important highlights. Warm cream separates sections and creates subtle surfaces. Muted text is used for metadata and supporting information.
+Orange is reserved for primary actions, emphasis, links, and important highlights. Sage is used through surfaces, process accents, preference or compatibility indicators, and calm informational states rather than green buttons. Terracotta is used sparingly in illustrations and decorative surfaces. Warm cream separates sections and creates subtle surfaces. Muted text is used for metadata and supporting information.
+
+### Semantic colors
+
+Semantic colors must remain distinct from the brand palette and meet contrast requirements in their actual context:
+
+| Meaning | Preferred treatment |
+|---|---|
+| Available / success | Muted sage surface or text with sufficient contrast |
+| Warning / attention | Muted amber |
+| Error / unavailable | Muted brick red |
+| Information | Dusty blue-gray used sparingly |
+| Disabled | Warm gray with reduced emphasis |
+
+Use pale sage, terracotta, and blue-gray as backgrounds when contrast is insufficient for small text. Do not use light accent colors directly as body text or button labels.
 
 ## 3. Typography
 
@@ -138,7 +174,7 @@ The header is sticky, approximately `78px` tall, and separated with a subtle bot
 
 Keep navigation simple:
 
-- Browse rooms
+- Find roommates
 - How it works
 - List a room
 - Account access
@@ -150,8 +186,7 @@ The full Campus Roomies wordmark is shown on mobile. Use the standalone mark onl
 
 The hero should communicate the product immediately:
 
-> Find a room.  
-> Find the right roommate.
+> Find a roommate who fits your life
 
 The preferred structure is:
 
@@ -166,7 +201,7 @@ The two role cards represent the primary user journeys:
 - **Need a roommate?** — `List your room`
 - **Looking for a place?** — `Create your profile`
 
-Cards can communicate clickability through subtle illustration movement, border or background changes, arrow movement, and small elevation. On mobile, illustrations must have enough separation to avoid visual collisions.
+Keep the hero copy and role actions centered on the landing page. Use a single-color orange emphasis rather than a gradient in the headline. Cards can communicate clickability through subtle illustration movement, border or background changes, arrow movement, and small elevation. On mobile, illustrations must have enough separation to avoid visual collisions.
 
 ## 9. Listing cards
 

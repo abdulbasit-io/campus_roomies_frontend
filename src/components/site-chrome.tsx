@@ -70,12 +70,11 @@ export function Header() {
       <div className="shell header-inner">
         <Logo />
         <nav className="desktop-nav" aria-label="Primary navigation">
-          <Link href="/browse">Browse rooms</Link>
+          <Link href="/browse">Find roommates</Link>
           <Link href="/how-it-works">How it works</Link>
         </nav>
         <div className="header-actions">
           {!profile && <Link className="text-link desktop-only" href={authLink('/login', currentPath)}>Log in</Link>}
-          <Link className="button button-small" href="/listings/new">List a room</Link>
           <ThemeToggle />
           <button className="account-trigger" aria-expanded={menuOpen} aria-haspopup="menu" onClick={() => setMenuOpen((open) => !open)}><span className="avatar-button" style={profile?.photoUrl ? { backgroundImage: `url("${profile.photoUrl}")` } : undefined}>{!profile?.photoUrl && <CircleUserRound size={18} />}</span><ChevronDown size={14} className="desktop-only" /></button>
           {menuOpen && <div ref={menuRef} className="account-menu" role="menu">
@@ -102,9 +101,9 @@ export function Footer() {
       <div className="shell footer-grid">
         <div>
           <Logo />
-          <p className="footer-copy">A calmer way to find a room and a living situation that feels like it could work.</p>
+          <p className="footer-copy">Find compatible roommates and better housing near campus.</p>
         </div>
-        <div><h3>Explore</h3><Link href="/browse">Browse rooms</Link><Link href="/how-it-works">How it works</Link></div>
+        <div><h3>Explore</h3><Link href="/browse">Find roommates</Link><Link href="/how-it-works">How it works</Link></div>
         <div><h3>Host</h3><Link href="/listings/new">List a room</Link><Link href="/profile">My profile</Link></div>
         <div><h3>Trust &amp; care</h3><Link href="/feedback">Share feedback</Link><Link href="/report">Safety guidelines</Link><Link href="/privacy">Privacy</Link></div>
       </div>
