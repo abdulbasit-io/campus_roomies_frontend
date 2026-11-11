@@ -46,7 +46,7 @@ export default function FeedbackPage() {
       <p className="eyebrow">Feedback received</p>
       <h1>Thanks for helping us make this better.</h1>
       <p>Your feedback is saved for the Campus Roomies team, and an email notification has been queued.</p>
-      <div className="feedback-success-actions"><Link className="button" href="/browse">Explore rooms</Link><button className="button button-secondary" onClick={() => { setSubmitted(false); setMessage(''); setContactEmail(''); }}>Send more feedback</button></div>
+      <div className="feedback-success-actions"><Link className="button" href="/browse">Explore roommates</Link><button className="button button-secondary" onClick={() => { setSubmitted(false); setMessage(''); setContactEmail(''); }}>Send more feedback</button></div>
     </section> : <section className="feedback-panel">
       <h1>What could work better?</h1>
       <p className="feedback-intro">Share a suggestion, tell us what was confusing, or let us know when something is not working. You can send feedback without signing in.</p>

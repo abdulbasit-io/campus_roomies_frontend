@@ -84,7 +84,7 @@ export function Header() {
               <Link role="menuitem" href="/profile" onClick={() => setMenuOpen(false)}><UserRound size={16} /> Profile</Link>
               <Link role="menuitem" href="/listings/new" onClick={() => setMenuOpen(false)}><Plus size={16} /> Create a listing</Link>
               <Link role="menuitem" href="/profile/listings" onClick={() => setMenuOpen(false)}><FileText size={16} /> My listings</Link>
-              <Link role="menuitem" href="/profile/saved" onClick={() => setMenuOpen(false)}><Bookmark size={16} /> Saved rooms</Link>
+              <Link role="menuitem" href="/profile/saved" onClick={() => setMenuOpen(false)}><Bookmark size={16} /> Saved listings</Link>
               <button role="menuitem" onClick={handleLogout}><LogOut size={16} /> Log out</button>
             </> : <Link role="menuitem" href={authLink('/login', currentPath)} onClick={() => setMenuOpen(false)}>Log in or create an account</Link>}
             {logoutError && <p className="form-error" role="alert">{logoutError}</p>}
