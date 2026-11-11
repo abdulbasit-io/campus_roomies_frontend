@@ -15,7 +15,7 @@ export default function NotFound() {
         </p>
         <div className="not-found-actions">
           <Link className="button" href="/">Back to home</Link>
-          <Link className="button button-secondary" href="/browse">Browse rooms</Link>
+          <Link className="button button-secondary" href="/browse">Find roommates</Link>
         </div>
       </main>
       <Footer />

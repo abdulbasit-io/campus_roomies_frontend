@@ -13,7 +13,7 @@ export function SaveButton({ listingId, compact = false }: { listingId: string; 
     window.addEventListener('campus-roomies-storage', sync);
     return () => window.removeEventListener('campus-roomies-storage', sync);
   }, [listingId]);
-  return <button className={compact ? 'heart' : 'button button-secondary full-width'} aria-label={saved ? 'Remove from saved rooms' : 'Save listing'} onClick={() => {
+  return <button className={compact ? 'heart' : 'button button-secondary full-width'} aria-label={saved ? 'Remove from saved listings' : 'Save listing'} onClick={() => {
     const ids = readStoredIds(savedListingsKey);
     writeStoredIds(savedListingsKey, saved ? ids.filter((id) => id !== listingId) : [...new Set([...ids, listingId])]);
     if (!saved) void trackAnalyticsEvent('LISTING_SAVED', { listingId });

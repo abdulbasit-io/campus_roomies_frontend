@@ -98,8 +98,8 @@ export default function ListingDetailsPage() {
     });
   }, [id]);
 
-  if (unavailable) return <><Header /><main className="details-page shell"><Link className="back-link" href="/browse"><ArrowLeft size={14} /> Back to rooms</Link><div className="empty-state"><h1>This listing is no longer available.</h1><p>It may have been found or temporarily restricted. Browse active listings to find another option.</p><Link className="button" href="/browse">Browse active listings</Link></div></main><Footer /></>;
-  if (error) return <><Header /><main className="details-page shell"><Link className="back-link" href="/browse"><ArrowLeft size={14} /> Back to rooms</Link><p className="form-error" role="alert">{error}</p></main><Footer /></>;
+  if (unavailable) return <><Header /><main className="details-page shell"><Link className="back-link" href="/browse"><ArrowLeft size={14} /> Back to roommates</Link><div className="empty-state"><h1>This listing is no longer available.</h1><p>It may have been found or temporarily restricted. Browse active listings to find another option.</p><Link className="button" href="/browse">Find roommates</Link></div></main><Footer /></>;
+  if (error) return <><Header /><main className="details-page shell"><Link className="back-link" href="/browse"><ArrowLeft size={14} /> Back to roommates</Link><p className="form-error" role="alert">{error}</p></main><Footer /></>;
   if (!listing) return <><Header /><main className="details-page shell"><p className="contact-loading" role="status">Loading listing…</p></main><Footer /></>;
 
   const card = toCardListing(listing);
@@ -126,7 +126,7 @@ export default function ListingDetailsPage() {
   const isActiveListing = listing.status === 'ACTIVE';
 
   return <><Header /><main className="details-page shell">
-    <Link className="back-link" href="/browse"><ArrowLeft size={14} /> Back to rooms</Link>
+    <Link className="back-link" href="/browse"><ArrowLeft size={14} /> Back to roommates</Link>
     <div className="details-grid"><div>
       <Reveal className="details-reveal details-gallery-reveal">
       <div className="details-gallery">

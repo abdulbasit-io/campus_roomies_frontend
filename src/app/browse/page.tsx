@@ -87,16 +87,16 @@ function BrowseContent() {
   }
 
   return <><Header /><main className="browse-page shell">
-    <div className="browse-header"><div><h1>Rooms around your campus</h1><p>Browse spaces with enough detail to imagine your everyday there.</p></div><span className="catalog-pill">Live listings</span></div>
+    <div className="browse-header"><div><h1>Find roommates near your campus</h1><p>Explore compatible roommates and housing options near campus.</p></div><span className="catalog-pill">Roommate listings</span></div>
     <div className="filter-bar">
       <label>Institution<select value={institutionId} onChange={(event) => { const value = event.target.value; setInstitutionId(value); setAreaId(''); setPage(1); void trackAnalyticsEvent('SEARCH_PERFORMED', { ...(value ? { institutionId: value } : {}) }); }}><option value="">All institutions</option>{institutions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       <label>Area<select value={areaId} onChange={(event) => { setAreaId(event.target.value); setPage(1); void trackAnalyticsEvent('SEARCH_PERFORMED', { ...(institutionId ? { institutionId } : {}), ...(intent ? { intent: intent as 'ROOM_AVAILABLE' | 'ROOM_NEEDED' } : {}) }); }} disabled={!institutionId}><option value="">All areas</option>{areas.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}</select></label>
       <label>Listing type<select value={intent} onChange={(event) => { const value = event.target.value; setIntent(value); setPage(1); void trackAnalyticsEvent('SEARCH_PERFORMED', { ...(institutionId ? { institutionId } : {}), ...(value ? { intent: value as 'ROOM_AVAILABLE' | 'ROOM_NEEDED' } : {}) }); }}><option value="">All listing types</option><option value="ROOM_AVAILABLE">Room available</option><option value="ROOM_NEEDED">Looking for a room</option></select></label>
       <button className="filter-reset" onClick={reset}>Reset filters</button>
     </div>
-    <div className="results-summary"><span>{loading ? 'Loading listings…' : `${total} spaces to explore`}</span><span>Newest first · Page {page}</span></div>
+    <div className="results-summary"><span>{loading ? 'Loading listings…' : `${total} listings to explore`}</span><span>Newest first · Page {page}</span></div>
     {error && <p className="form-error" role="alert">{error}</p>}
-    {loading ? <p className="contact-loading" role="status">Loading active listings…</p> : listings.length ? <div className="listing-grid listing-grid-three">{listings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div> : <div className="empty-state"><span className="empty-icon">⌂</span><h2>No rooms found just yet.</h2><p>Try widening your search. The right place may be one neighbourhood over.</p><button className="button" onClick={reset}>Clear filters</button></div>}
+    {loading ? <p className="contact-loading" role="status">Loading active listings…</p> : listings.length ? <div className="listing-grid listing-grid-three">{listings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div> : <div className="empty-state"><span className="empty-icon">⌂</span><h2>No roommate listings found yet.</h2><p>Try widening your search. The right match may be one neighbourhood over.</p><button className="button" onClick={reset}>Clear filters</button></div>}
     {!loading && total > 12 && <div className="admin-pagination"><button className="button button-secondary" disabled={page <= 1} onClick={() => setPage((current) => current - 1)}>Previous</button><span>Page {page} of {Math.ceil(total / 12)}</span><button className="button button-secondary" disabled={page >= Math.ceil(total / 12)} onClick={() => setPage((current) => current + 1)}>Next</button></div>}
   </main><Footer /></>;
 }

@@ -30,8 +30,8 @@ export function SavedRooms() {
     window.addEventListener('campus-roomies-storage', sync);
     return () => { active = false; window.removeEventListener('campus-roomies-storage', sync); };
   }, []);
-  if (loading) return <p className="contact-loading" role="status">Loading saved rooms…</p>;
+  if (loading) return <p className="contact-loading" role="status">Loading saved listings…</p>;
   if (error) return <><p className="form-error" role="alert">{error}</p>{saved.length > 0 && <div className="listing-grid listing-grid-three">{saved.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>}</>;
-  if (!saved.length) return <div className="account-empty"><Bookmark size={26} /><h2>Your saved rooms will appear here.</h2><p>Browse rooms and save the ones you want to think about.</p><Link className="button" href="/browse">Browse rooms →</Link></div>;
+  if (!saved.length) return <div className="account-empty"><Bookmark size={26} /><h2>Your saved listings will appear here.</h2><p>Find roommates and save the listings you want to think about.</p><Link className="button" href="/browse">Find roommates →</Link></div>;
   return <div className="listing-grid listing-grid-three">{saved.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div>;
 }

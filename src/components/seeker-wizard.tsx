@@ -306,7 +306,7 @@ export function SeekerWizard() {
           <p className="eyebrow">{published && editingActive ? 'Listing updated' : published ? 'Listing published' : 'Draft saved'}</p>
           <h1>{published && editingActive ? 'Your search has been updated.' : published ? 'Your search is now visible to potential roommates.' : 'The right room may find you next.'}</h1>
           <p>{published && editingActive ? 'The latest details are now visible to potential roommates.' : published ? 'Students with suitable rooms can now discover your search.' : 'Your progress is saved. Complete your profile when you are ready to publish and become visible to people with suitable rooms.'}</p>
-          <div className="success-actions"><Link className="button" href="/profile/listings">Manage my listings</Link><Link className="button button-secondary" href="/browse">Browse rooms</Link></div>
+          <div className="success-actions"><Link className="button" href="/profile/listings">Manage my listings</Link><Link className="button button-secondary" href="/browse">Find roommates</Link></div>
         </main>
         <Footer />
       </>
